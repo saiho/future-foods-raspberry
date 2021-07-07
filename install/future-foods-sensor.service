@@ -1,0 +1,15 @@
+[Unit]
+Description=Future Foods sensor service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u main.py
+WorkingDirectory=/boot/future-foods
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+RestartSec=60
+User=pi
+
+[Install]
+WantedBy=multi-user.target
