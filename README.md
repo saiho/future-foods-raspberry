@@ -120,3 +120,11 @@ sudo systemctl stop future-foods-sensor # Stop
 systemctl status future-foods-sensor # Get status
 systemctl status future-foods-sensor -n1000 # Get status and 1000 lines of logs
 ```
+
+# Pinout
+
+![Pinout Raspberry](media/pinout.png)
+
+![Pinout Raspberry Zero](media/pinout-zero.png)
+
+(License notes: these images have been extracted from external web sites, I am not the author)
