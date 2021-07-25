@@ -1,6 +1,7 @@
 This is a very draft project for handling the sensors of an automated garden with Raspberry.
 
-This readme contains notes, thoughts, code snippets in no special order or relance.
+This readme contains miscellaneous notes, thoughts, code snippets, etc.
+
 
 # Setting up Raspberry for the first time
 
@@ -25,13 +26,19 @@ network={
 ```
 
 That setups the Wifi connection of the Raspberry.
-Replace the name, password of the Wifi and the country by the appropriate ones.
+Replace the name and password of the Wifi and the country by the appropriate ones.
 
 Additional instructions to access Raspberry for the first time without monitor:
 
 https://www.raspberrypi.org/documentation/configuration/wireless/headless.md
 
-## Login
+## Add an extra partition
+
+After finishing the setup, the idea is to lock the two default partitions (`boot` and `rootfs`) setting them as readonly (see below, [Overlay FS](#overlay-fs)). To allow upgrading the application easily, a new partition is created. It will contain the application and some configuration files.
+
+From Liux, shrink the `rootfs` partition. That can be done using several partition manager tools, or from the command line, using `resize2fs`. Then create a new EXT4 partition. Again, that can be done with a partition manager or the commands `parted` and `mkfs.ext4`.
+
+## First boot, and login
 
 Boot the Raspbbery and wait some minutes.
 
@@ -60,11 +67,13 @@ sudo reboot
 Run `sudo raspi-config` and then:
 
 - Interfacing options / I2C / Enable
-- Interfacing options / SPI / Enable
-- Localisation options / Locale
 - Localisation options / Timezone
+- Localisation options / Locale
 
-## Install additional packages
+
+# Installing the application
+
+## Install required packages
 
 ```sh
 sudo apt-get install python3-pip python3-smbus python3-dev i2c-tools
@@ -74,17 +83,58 @@ sudo apt-get install libpq5 # to access Postgre
 ## Install Pyhton dependencies
 
 ```sh
-pip3 install seeed-python-si114x
-pip3 install bme680
-pip3 install scd30_i2c
-pip3 install adafruit-circuitpython-mcp3xxx
-pip3 install psycopg2-binary # to access Postgre
+# sensors
+sudo pip3 install seeed-python-si114x
+sudo pip3 install bme680
+sudo pip3 install scd30_i2c
+sudo pip3 install grove.py
+sudo pip3 install gpiozero
+sudo pip3 install adafruit-circuitpython-as7341
+
+# to access Postgre
+sudo pip3 install psycopg2-binary
+
+# to capture images from usb camera
+sudo pip3 install opencv-python-headless
+
+# other, required
+sudo pip3 install pyyaml
 ```
 
-# Installing the application
+## Mount new partition
 
-- Create directory `/boot/future-foods`.
-- Copy `code/main.py` to `/boot/future-foods/main.py`.
+The idea is to have an entry in the `fstab` that will mount the new partition by default as read-only. When necessary, it could be remounted as read-write.
+
+Get the PARTUUID of the new partition, running `blkid /dev/mmcblk0p3`.
+
+Add to `/etc/fstab` the following line:
+
+```
+PARTUUID=ec3937c5-03  /app            ext4    ro,exec,nosuid,nodev,noatime,auto    0       2
+```
+
+## Install the code
+
+- Create the directory of the app and give rights to the non-root user:
+
+```sh
+sudo mount -o rw /app # Mount as read-write
+sudo mkdir /app/future-foods
+sudo chown pi.pi /app/future-foods
+```
+
+- Copy `app/*` into `/app/future-foods`.
+- Configure settings of `/app/future-foods/config.yml`.
+
+Set as read-only:
+
+```sh
+chmod 600 config.yml # be sure that the configuration file is not readable by other users, since it contains sensitive information
+sudo mount -o remount,ro /app # set as read-only
+```
+
+## Create a system service
+
 - Copy `install/future-foods-sensor.service` to `/etc/systemd/system/future-foods-sensor.service`.
 - Run:
 
@@ -93,26 +143,38 @@ sudo systemctl daemon-reload
 sudo systemctl enable future-foods-sensor # Start the service automatically on boot
 ```
 
+
 # Post installation
+
+## Security
+
+It is recommended that access to root account is protected with password. See: https://www.raspberrypi.org/documentation/configuration/security.md
+
+To do that, still allowing the user `pi` to remount the partition of the application and start/stop the service, replace the content of `/etc/sudoers.d/010_pi-nopasswd` by:
+
+```
+pi ALL=(ALL) PASSWD: ALL
+pi ALL=(root) NOPASSWD: /usr/bin/systemctl start future-foods-sensor
+pi ALL=(root) NOPASSWD: /usr/bin/systemctl stop future-foods-sensor
+pi ALL=(root) NOPASSWD: /usr/bin/systemctl restart future-foods-sensor
+pi ALL=(root) NOPASSWD: /usr/bin/mount -o remount\,rw /app
+pi ALL=(root) NOPASSWD: /usr/bin/mount -o remount\,ro /app
+```
+
+Note, the characters `,`, `:`, `=` and `\` must be escaped with `\` when they are part of the command arguments.
+
+## Overlay FS
 
 It is very much recommended to enable Overlay FS to prevent damaging the SD card due to continuos writes or corrupting the file system due to sudden loss of power.
 
 Run `sudo raspi-config` and activate: Performance / Overlay FS.
 
-From now on any change in the root file system will be lost after reboot. To make permanent changes, for example to upgrade packages, you need to disable the Overlay FS first.
+From now on, any change in the root file system will be lost after reboot. To make permanent system changes, like installing or upgrading packages, you need to disable the Overlay FS first and reboot.
 
-Changes inside `/boot` are permanent across reboots, that's why the code is installed there. Then it possible to upgrade it without disabling the Overlay FS.
+Changes inside `/app` are permanent across reboots. There is no need of disabling the Overlay FS, that's why the code is installed there.
 
-You could also choose to make the `/boot` read-only when activating Overlay FS. It can be turn read-write at any moment (without disabling Overlay FS) with the command:
 
-```sh
-mount -o remount,rw /boot # set as read-write
-mount -o remount,ro /boot # set as read-only
-```
-
-# Start stop the service
-
-Run
+## Starting and stoping the service on demand
 
 ```sh
 sudo systemctl start future-foods-sensor # Start
@@ -121,10 +183,19 @@ systemctl status future-foods-sensor # Get status
 systemctl status future-foods-sensor -n1000 # Get status and 1000 lines of logs
 ```
 
-# Pinout
+## Upgrading the code or updating settings
 
-![Pinout Raspberry](media/pinout.png)
+Every you need to modify the code or the settings, run:
 
-![Pinout Raspberry Zero](media/pinout-zero.png)
+```sh
+sudo systemctl stop future-foods-sensor
+sudo mount -o remount,rw /app
+```
 
-(License notes: these images have been extracted from external web sites, I am not the author)
+- Copy new `app/*` into `/app/future-foods`.
+- Configure settings of `/app/future-foods/config.yml`.
+
+```sh
+sudo mount -o remount,ro /app
+sudo systemctl start future-foods-sensor
+```

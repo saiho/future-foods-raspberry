@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=/usr/bin/python3 -u main.py
-WorkingDirectory=/boot/future-foods
+WorkingDirectory=/app/future-foods
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
