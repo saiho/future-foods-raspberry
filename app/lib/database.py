@@ -5,7 +5,7 @@ from lib import user_config
 count_since_start: int = 0
 
 
-def insert_data(measurement: Measurement):
+def insert_data(measurement: Measurement, picture_data: bytes):
     global count_since_start
 
     count_since_start = count_since_start + 1
@@ -131,6 +131,18 @@ def insert_data(measurement: Measurement):
         measurement.as7341.red_680nm,
         measurement.as7341.stdev_red_680nm
     ))
+
+    if picture_data:
+        print("Inserting measurement_picture")
+        cursor.execute("""
+            INSERT INTO measurement_picture
+                ("owner", create_date, picture_1)
+            VALUES
+                (%s, %s, %s)""", (
+            measurement.owner,
+            create_date,
+            picture_data
+        ))
 
     connection.commit()
     cursor.close()

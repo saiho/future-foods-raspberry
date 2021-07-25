@@ -11,6 +11,7 @@ import lib.si1145_sensor as si1145_sensor
 import lib.bme680_sensor as bme680_sensor
 import lib.scd30_sensor as scd30_sensor
 import lib.as7341_sensor as as7341_sensor
+import lib.camera as camera
 import lib.database as database
 import lib.common as common
 import lib.user_config as user_config
@@ -23,7 +24,7 @@ if user_config.disable_monitoring:
     sys.exit("Bored of doing nothing")
 
 print("Starting sensor monitor service")
-print("Current Time =", datetime.now())
+print("Current Time =", datetime.now().astimezone())
 
 # Init sensors
 if not user_config.disable_capacitive_moisture_sensor:
@@ -46,12 +47,17 @@ if not user_config.disable_raspberry_sensor:
     raspberry_sensor.read() # try reading, ignore result
 
 measurements: List[Measurement] = []
+
 post_data_next: datetime = datetime.now() + common.post_data_interval
+
+picture_take_next: datetime = datetime.combine(datetime.now(), user_config.picture_take_time)
+if picture_take_next < datetime.now():
+    picture_take_next = picture_take_next + common.picture_take_interval
 
 try:
     while True:
 
-        measurement = Measurement(owner=user_config.owner, label=user_config.label)
+        measurement: Measurement = Measurement(owner=user_config.owner, label=user_config.label)
         if not user_config.disable_capacitive_moisture_sensor:
             measurement.capacitive_moisture = capacitive_moisture_sensor.read()
         if not user_config.disable_si1145_sensor:
@@ -66,13 +72,22 @@ try:
             measurement.raspberry = raspberry_sensor.read()
         measurements.append(measurement)
 
+        picture_info: Measurement.Picture = None
+        picture_data: bytes = None
+        if not user_config.disable_picture_take and datetime.now() > picture_take_next:
+            picture_take_next = picture_take_next + common.picture_take_interval
+            picture_info, picture_data = camera.take_picture()
+
         if datetime.now() > post_data_next:
             post_data_next = datetime.now() + common.post_data_interval
-            database.insert_data(Measurement.median(measurements))
+            combined_measurement: Measurement = Measurement.combine(measurements)
+            if picture_data:
+                combined_measurement.picture = picture_info
+            database.insert_data(combined_measurement, picture_data)
             measurements = []
 
         # Wait for next measurement
-        print("Wait for next measurement at", (datetime.now() + common.measurement_interval))
+        print("Wait for next measurement at", (datetime.now() + common.measurement_interval).astimezone())
         time.sleep(common.measurement_interval.total_seconds())
 
 finally:

@@ -76,8 +76,10 @@ Run `sudo raspi-config` and then:
 ## Install required packages
 
 ```sh
-sudo apt-get install python3-pip python3-smbus python3-dev i2c-tools
-sudo apt-get install libpq5 # to access Postgre
+sudo apt-get install python3-pip python3-smbus python3-dev # Python
+sudo apt-get install i2c-tools # sensors
+sudo apt-get install libpq5 # Postgre
+sudo apt-get install libwebp6 libtiff5 libopenexr23 libavformat58 libswscale5 liblapack3 libatlas3-base # camera
 ```
 
 ## Install Pyhton dependencies

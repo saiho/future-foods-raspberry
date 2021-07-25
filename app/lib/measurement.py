@@ -158,6 +158,10 @@ class Measurement:
             median_data.num_samples = len(data_list)
             return median_data
 
+    class Picture:
+        format: str
+        quality: int
+
     # Values
     capacitive_moisture: CapacitiveMoisture
     si1145: SI1145
@@ -165,6 +169,7 @@ class Measurement:
     scd30: SCD30
     as7341: AS7341
     raspberry: Raspberry
+    picture: Picture
 
     # Metadata
     owner: str
@@ -191,26 +196,26 @@ class Measurement:
         return json.dumps(self.__dict__, default=json_converter)
 
     @staticmethod
-    def median(measurements: List[Measurement]) -> Measurement:
+    def combine(measurements: List[Measurement]) -> Measurement:
 
         if len(measurements) == 0:
             return None
 
-        median_measurement: Measurement = Measurement()
+        combined_measurement: Measurement = Measurement()
 
-        median_measurement.capacitive_moisture = Measurement.CapacitiveMoisture._median(
+        combined_measurement.capacitive_moisture = Measurement.CapacitiveMoisture._median(
             [m.capacitive_moisture for m in measurements if m.capacitive_moisture])
-        median_measurement.si1145 = Measurement.SI1145._median([m.si1145 for m in measurements if m.si1145])
-        median_measurement.bme680 = Measurement.BME680._median([m.bme680 for m in measurements if m.bme680])
-        median_measurement.scd30 = Measurement.SCD30._median([m.scd30 for m in measurements if m.scd30])
-        median_measurement.as7341 = Measurement.AS7341._median([m.as7341 for m in measurements if m.as7341])
-        median_measurement.raspberry = Measurement.Raspberry._median([m.raspberry for m in measurements if m.raspberry])
+        combined_measurement.si1145 = Measurement.SI1145._median([m.si1145 for m in measurements if m.si1145])
+        combined_measurement.bme680 = Measurement.BME680._median([m.bme680 for m in measurements if m.bme680])
+        combined_measurement.scd30 = Measurement.SCD30._median([m.scd30 for m in measurements if m.scd30])
+        combined_measurement.as7341 = Measurement.AS7341._median([m.as7341 for m in measurements if m.as7341])
+        combined_measurement.raspberry = Measurement.Raspberry._median([m.raspberry for m in measurements if m.raspberry])
 
-        median_measurement.owner = measurements[0].owner
-        median_measurement.label = measurements[0].label
-        median_measurement.version = measurements[0].version
-        median_measurement.measured_from = min([m.measured_from for m in measurements])
-        median_measurement.measured_to = max([m.measured_from for m in measurements])
-        median_measurement.count_since_start = measurements[0].count_since_start
+        combined_measurement.owner = measurements[0].owner
+        combined_measurement.label = measurements[0].label
+        combined_measurement.version = measurements[0].version
+        combined_measurement.measured_from = min([m.measured_from for m in measurements])
+        combined_measurement.measured_to = max([m.measured_from for m in measurements])
+        combined_measurement.count_since_start = measurements[0].count_since_start
 
-        return median_measurement
+        return combined_measurement

@@ -12,13 +12,14 @@ scd30: scd30_i2c.SCD30
 firmware_version: int
 temperature_offset_correction_next: datetime
 
+
 def init():
     global scd30
     global firmware_version
 
     print("Init SCD30 sensor")
     scd30 = scd30_i2c.SCD30()
-    scd30.stop_periodic_measurement() # just in case was left active in a previous run
+    scd30.stop_periodic_measurement()  # just in case was left active in a previous run
     firmware_version = scd30.get_firmware_version()
     if firmware_version is None:
         print("Problem communicating with SCD30 sensor, trying to reset")
@@ -39,6 +40,8 @@ def init():
 
 
 def close():
+    global scd30
+
     if scd30:
         print("SCD30 Stop measuring")
         scd30.stop_periodic_measurement()
