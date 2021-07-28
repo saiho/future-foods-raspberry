@@ -29,22 +29,22 @@ print("Current Time =", datetime.now().astimezone())
 # Init sensors
 if not user_config.disable_capacitive_moisture_sensor:
     capacitive_moisture_sensor.init()
-    capacitive_moisture_sensor.read() # try reading, ignore result
+    capacitive_moisture_sensor.read()  # try reading, ignore result
 if not user_config.disable_si1145_sensor:
     si1145_sensor.init()
-    si1145_sensor.read() # try reading, ignore result
+    si1145_sensor.read()  # try reading, ignore result
 if not user_config.disable_bme680_sensor:
     bme680_sensor.init()
-    bme680_sensor.read() # try reading, ignore result
+    bme680_sensor.read()  # try reading, ignore result
 if not user_config.disable_scd30_sensor:
     scd30_sensor.init()
-    scd30_sensor.read() # try reading, ignore result
+    scd30_sensor.read()  # try reading, ignore result
 if not user_config.disable_as7341_sensor:
     as7341_sensor.init()
-    as7341_sensor.read() # try reading, ignore result
+    as7341_sensor.read()  # try reading, ignore result
 if not user_config.disable_raspberry_sensor:
     raspberry_sensor.init()
-    raspberry_sensor.read() # try reading, ignore result
+    raspberry_sensor.read()  # try reading, ignore result
 
 measurements: List[Measurement] = []
 
@@ -56,6 +56,8 @@ if picture_take_next < datetime.now():
 
 try:
     while True:
+
+        measurement_next: datetime = datetime.now() + common.measurement_interval
 
         measurement: Measurement = Measurement(owner=user_config.owner, label=user_config.label)
         if not user_config.disable_capacitive_moisture_sensor:
@@ -87,8 +89,8 @@ try:
             measurements = []
 
         # Wait for next measurement
-        print("Wait for next measurement at", (datetime.now() + common.measurement_interval).astimezone())
-        time.sleep(common.measurement_interval.total_seconds())
+        print("Wait for next measurement at", measurement_next.astimezone())
+        time.sleep((measurement_next - datetime.now()).total_seconds())
 
 finally:
     scd30_sensor.close()

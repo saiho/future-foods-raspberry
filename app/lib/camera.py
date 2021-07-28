@@ -7,7 +7,7 @@ from lib.measurement import Measurement
 
 def take_picture() -> Tuple[Measurement.Picture, bytes]:
     print("Init Camera")
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(user_config.picture_video_device)
     try:
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, user_config.picture_width)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, user_config.picture_height)
@@ -15,15 +15,15 @@ def take_picture() -> Tuple[Measurement.Picture, bytes]:
 
         captured, frame = camera.read()
         if not captured:
-            print('Failed to retrieve picture')
+            print("Failed to retrieve picture")
             return None
 
         encoded, picture_data = cv2.imencode("." + common.picture_format, frame, [cv2.IMWRITE_WEBP_QUALITY, user_config.picture_quality])
         if not encoded:
-            print('Failed to encode picture')
+            print("Failed to encode picture")
             return None
 
-        print(f'Retrieved and encoded picture (size = {len(picture_data)})')
+        print(f"Retrieved and encoded picture (size = {len(picture_data)})")
 
         picture_info: Measurement.Picture = Measurement.Picture()
         picture_info.quality = user_config.picture_quality

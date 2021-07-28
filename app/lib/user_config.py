@@ -6,15 +6,16 @@ import __main__
 
 owner: str
 label: str
-db_host: str
-db_port: int
-db_user: str
-db_password: str
-db_database: str
+database_host: str
+database_port: int
+database_name: str
+database_user: str
+database_password: str
 picture_take_time: time = time(12, 00)
 picture_width: int = 1920
 picture_height: int = 1080
 picture_quality: int = 100
+picture_video_device: int = -1
 disable_monitoring: bool = False
 disable_capacitive_moisture_sensor: bool = False
 disable_si1145_sensor: bool = False
@@ -28,15 +29,16 @@ disable_picture_take: bool = False
 def load(file_name):
     global owner
     global label
-    global db_host
-    global db_port
-    global db_user
-    global db_password
-    global db_database
+    global database_host
+    global database_port
+    global database_name
+    global database_user
+    global database_password
     global picture_take_time
     global picture_width
     global picture_height
     global picture_quality
+    global picture_video_device
     global disable_monitoring
     global disable_capacitive_moisture_sensor
     global disable_si1145_sensor
@@ -63,15 +65,16 @@ def load(file_name):
 
             owner = config_data.get("owner")
             label = config_data.get("label")
-            db_host = config_data.get("db_host")
-            db_port = config_data.get("db_port")
-            db_user = config_data.get("db_user")
-            db_password = config_data.get("db_password")
-            db_database = config_data.get("db_database")
+            database_host = config_data.get("database_host")
+            database_port = config_data.get("database_port")
+            database_name = config_data.get("database_name")
+            database_user = config_data.get("database_user")
+            database_password = config_data.get("database_password")
             picture_take_time = to_time(config_data.get("picture_take_time", picture_take_time))
             picture_width = config_data.get("picture_width", picture_width)
             picture_height = config_data.get("picture_height", picture_height)
             picture_quality = config_data.get("picture_quality", picture_quality)
+            picture_video_device = config_data.get("picture_video_device", picture_video_device)
             disable_monitoring = config_data.get("disable_monitoring", disable_monitoring)
             disable_capacitive_moisture_sensor = config_data.get("disable_capacitive_moisture_sensor", disable_capacitive_moisture_sensor)
             disable_si1145_sensor = config_data.get("disable_si1145_sensor", disable_si1145_sensor)

@@ -10,6 +10,9 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import camera
+from lib import user_config
+
+user_config.load("../config.yml")
 
 while True:
     picture_info, picture_data = camera.take_picture()

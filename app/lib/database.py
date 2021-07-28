@@ -13,11 +13,11 @@ def insert_data(measurement: Measurement, picture_data: bytes):
 
     print("Connecting to DB")
     connection = psycopg2.connect(
-        host=user_config.db_host,
-        port=user_config.db_port,
-        user=user_config.db_user,
-        password=user_config.db_password,
-        database=user_config.db_database)
+        host=user_config.database_host,
+        port=user_config.database_port,
+        database=user_config.database_name,
+        user=user_config.database_user,
+        password=user_config.database_password)
 
     create_date = measurement.measured_to.astimezone()
 
