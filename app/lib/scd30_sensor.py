@@ -70,17 +70,17 @@ def read(real_temperature: float = None) -> Measurement.SCD30:
                 # Reajust temperature offset
                 if real_temperature and datetime.now() > temperature_offset_correction_next:
                     temperature_offset_correction_next = datetime.now() + common.scd30_temperature_offset_correction_interval
-                    temperature_offset: float = data.temperature + scd30.get_temperature_offset() - real_temperature
-                    print("Recalculated offset temperature ", temperature_offset)
-                    if temperature_offset < 0:
-                        temperature_offset = 0
-                    if temperature_offset > common.scd30_temperature_offset_max:
-                        temperature_offset = common.scd30_temperature_offset_max
-                    scd30.set_temperature_offset(temperature_offset)
+                    data.temperature_offset = data.temperature + scd30.get_temperature_offset() - real_temperature
+                    print("Recalculated offset temperature ", data.temperature_offset)
+                    if data.temperature_offset < 0:
+                        data.temperature_offset = 0
+                    if data.temperature_offset > common.scd30_temperature_offset_max:
+                        data.temperature_offset = common.scd30_temperature_offset_max
+                    scd30.set_temperature_offset(data.temperature_offset)
                 else:
-                    temperature_offset = scd30.get_temperature_offset()
+                    data.temperature_offset = scd30.get_temperature_offset()
 
-                print(f"CO2 = {data.co2_ppm}, temperature = {data.temperature}, temperature_offset = {temperature_offset}, humidity = {data.humidity}")
+                print(f"CO2 = {data.co2_ppm}, temperature = {data.temperature}, temperature_offset = {data.temperature_offset}, humidity = {data.humidity}")
 
     if not data:
         print("Failed to read SCD30 data, sensor not ready")

@@ -47,9 +47,11 @@ class Measurement:
     class SCD30:
         co2_ppm: float
         temperature: float
+        temperature_offset: float
         humidity: float
         stdev_co2_ppm: float
         stdev_temperature: float
+        stdev_temperature_offset: float
         stdev_humidity: float
         num_samples: int
         firmware_version: int
@@ -61,6 +63,7 @@ class Measurement:
             median_data: Measurement.SCD30 = Measurement.SCD30()
             median_data.co2_ppm, median_data.stdev_co2_ppm = _median_and_stdev([d.co2_ppm for d in data_list])
             median_data.temperature, median_data.stdev_temperature = _median_and_stdev([d.temperature for d in data_list])
+            median_data.temperature_offset, median_data.stdev_temperature_offset = _median_and_stdev([d.temperature_offset for d in data_list])
             median_data.humidity, median_data.stdev_humidity = _median_and_stdev([d.humidity for d in data_list])
             median_data.num_samples = len(data_list)
             median_data.firmware_version = data_list[0].firmware_version
