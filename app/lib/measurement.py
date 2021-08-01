@@ -13,7 +13,7 @@ def _median_and_stdev(values: list) -> Tuple[float, float]:
     median: float = statistics.median(values)
     if len(values) == 1:
         return (median, None)
-    stdev: float = statistics.pstdev(values) / median  # normalized standard deviation
+    stdev: float = statistics.pstdev(values)
     return (median, stdev)
 
 
