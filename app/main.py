@@ -24,6 +24,7 @@ if not user_config.enable_monitoring:
     sys.exit("Bored of doing nothing")
 
 print("Starting sensor monitor service")
+print("Version", common.version)
 print("Current Time =", datetime.now().astimezone())
 
 # Init sensors
