@@ -50,9 +50,13 @@ measurements: List[Measurement] = []
 
 post_data_next: datetime = datetime.now() + common.post_data_interval
 
+picture_info: Measurement.Picture = None
+picture_data: bytes = None
 picture_take_next: datetime = datetime.combine(datetime.now(), user_config.picture_take_time)
-if picture_take_next < datetime.now():
-    picture_take_next = picture_take_next + common.picture_take_interval
+if user_config.enable_picture_take:
+    while picture_take_next < datetime.now():
+        picture_take_next = picture_take_next + common.picture_take_interval
+    print("Next picture to be taken at", picture_take_next.astimezone())
 
 try:
     while True:
@@ -74,11 +78,10 @@ try:
             measurement.raspberry = raspberry_sensor.read()
         measurements.append(measurement)
 
-        picture_info: Measurement.Picture = None
-        picture_data: bytes = None
         if user_config.enable_picture_take and datetime.now() > picture_take_next:
             picture_take_next = picture_take_next + common.picture_take_interval
             picture_info, picture_data = camera.take_picture()
+            print("Next picture to be taken at", picture_take_next.astimezone())
 
         if datetime.now() > post_data_next:
             post_data_next = datetime.now() + common.post_data_interval
@@ -87,6 +90,8 @@ try:
                 combined_measurement.picture = picture_info
             database.insert_data(combined_measurement, picture_data)
             measurements = []
+            picture_info = None
+            picture_data = None
 
         # Wait for next measurement
         print("Wait for next measurement at", measurement_next.astimezone())
