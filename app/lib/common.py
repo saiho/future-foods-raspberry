@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-version: int = 202108012029
+version: int = 202108012036
 measurement_interval: timedelta = timedelta(minutes=5)
 post_data_interval: timedelta = timedelta(hours=2)
 picture_take_interval: timedelta = timedelta(days=1)
