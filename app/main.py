@@ -45,6 +45,8 @@ if not user_config.disable_as7341_sensor:
 if not user_config.disable_raspberry_sensor:
     raspberry_sensor.init()
     raspberry_sensor.read()  # try reading, ignore result
+if not user_config.disable_picture_take:
+    camera.init()
 
 measurements: List[Measurement] = []
 
@@ -94,3 +96,4 @@ try:
 
 finally:
     scd30_sensor.close()
+    camera.close()

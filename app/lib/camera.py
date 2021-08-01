@@ -1,33 +1,55 @@
 from typing import Tuple
-import cv2
+import os
+import tempfile
+import subprocess
 import lib.user_config as user_config
 import lib.common as common
 from lib.measurement import Measurement
 
+temp_dir: tempfile.TemporaryDirectory = None
+
+
+def init():
+    global temp_dir
+
+    temp_dir = tempfile.TemporaryDirectory()
+    print("Created temporay directory for camera", temp_dir.name)
+
+
+def close():
+    global temp_dir
+
+    if temp_dir is not None:
+        print("Clean temporay directory of camera")
+        temp_dir.cleanup()
+
 
 def take_picture() -> Tuple[Measurement.Picture, bytes]:
-    print("Init Camera")
-    camera = cv2.VideoCapture(user_config.picture_video_device)
-    try:
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, user_config.picture_width)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, user_config.picture_height)
-        print(f"Using supported resolution of {int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))}")
+    print("Take picture")
+    temp_file = os.path.join(temp_dir.name, 'capture')
 
-        captured, frame = camera.read()
-        if not captured:
-            print("Failed to retrieve picture")
-            return None
+    result: subprocess.CompletedProcess
 
-        encoded, picture_data = cv2.imencode("." + common.picture_format, frame, [cv2.IMWRITE_WEBP_QUALITY, user_config.picture_quality])
-        if not encoded:
-            print("Failed to encode picture")
-            return None
+    # Take picture as PNG
+    result = subprocess.run(['fswebcam', '-d', f'/dev/video{user_config.picture_video_device}', '-r',
+                            f'{user_config.picture_width}x{user_config.picture_height}', '--png', '0', '-F', str(common.picture_samples), temp_file])
+    if result.returncode != 0:
+        print("Error taking picture")
+        return None
 
-        print(f"Retrieved and encoded picture (size = {len(picture_data)})")
+    # Convert PNG to WEBP
+    result = subprocess.run(['cwebp', '-q', str(user_config.picture_quality), temp_file, '-o', '-'], stdout=subprocess.PIPE)
+    if result.returncode != 0:
+        print("Error converting to WEBP")
+        return None
+    picture_data: bytes = result.stdout
 
-        picture_info: Measurement.Picture = Measurement.Picture()
-        picture_info.quality = user_config.picture_quality
-        picture_info.format = common.picture_format
-        return (picture_info, picture_data.tobytes())
-    finally:
-        camera.release()
+    # Delete temporary PNG
+    result = subprocess.run(['rm', temp_file])
+
+    print(f"Retrieved and encoded picture (size = {len(picture_data)})")
+    
+    picture_info: Measurement.Picture = Measurement.Picture()
+    picture_info.quality = user_config.picture_quality
+    picture_info.format = common.picture_format
+    return (picture_info, picture_data)

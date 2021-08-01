@@ -79,7 +79,7 @@ Run `sudo raspi-config` and then:
 sudo apt-get install python3-pip python3-smbus python3-dev # Python
 sudo apt-get install i2c-tools # sensors
 sudo apt-get install libpq5 # Postgre
-sudo apt-get install libwebp6 libtiff5 libopenexr23 libavformat58 libswscale5 liblapack3 libatlas3-base # camera
+sudo apt-get install webp fswebcam # camera
 ```
 
 ## Install Pyhton dependencies
@@ -95,9 +95,6 @@ sudo pip3 install adafruit-circuitpython-as7341
 
 # to access Postgre
 sudo pip3 install psycopg2-binary
-
-# to capture images from usb camera
-sudo pip3 install opencv-python-headless
 
 # other, required
 sudo pip3 install pyyaml

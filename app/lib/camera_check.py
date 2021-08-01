@@ -14,9 +14,14 @@ from lib import user_config
 
 user_config.load("../config.yml")
 
-while True:
-    picture_info, picture_data = camera.take_picture()
-    with open("/tmp/picture." + picture_info.format, "wb") as picture_file:
-        picture_file.write(picture_data)
-        print("Picture saved in /tmp/picture." + picture_info.format)
-    time.sleep(5)
+camera.init()
+
+try:
+    while True:
+        picture_info, picture_data = camera.take_picture()
+        with open("/tmp/picture." + picture_info.format, "wb") as picture_file:
+            picture_file.write(picture_data)
+            print("Picture saved in /tmp/picture." + picture_info.format)
+        time.sleep(5)
+finally:
+    camera.close()
