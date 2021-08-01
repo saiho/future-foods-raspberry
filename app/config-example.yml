@@ -14,11 +14,11 @@ picture_height: 1080
 picture_quality: 100
 picture_video_device: 0
 
-disable_monitoring: false # Set to true to temporarily stop measuring and posting results
-disable_capacitive_moisture_sensor: false
-disable_si1145_sensor: false
-disable_bme680_sensor: false
-disable_scd30_sensor: false
-disable_as7341_sensor: false
-disable_raspberry_sensor: false
-disable_picture_take: false
+enable_monitoring: true # Set to false to stop measuring everything and posting results
+enable_capacitive_moisture_sensor: true
+enable_si1145_sensor: true
+enable_bme680_sensor: true
+enable_scd30_sensor: true
+enable_as7341_sensor: true
+enable_raspberry_sensor: true
+enable_picture_take: true
