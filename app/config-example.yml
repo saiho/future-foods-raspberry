@@ -12,6 +12,7 @@ picture_take_time: "18:00" # 24 hours time
 picture_width: 1920
 picture_height: 1080
 picture_quality: 100
+picture_num_samples: 5
 picture_video_device: 0
 
 enable_monitoring: true # Set to false to stop measuring everything and posting results

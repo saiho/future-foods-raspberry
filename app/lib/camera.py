@@ -11,7 +11,7 @@ def take_picture() -> Tuple[Measurement.Picture, bytes]:
     # Take picture as PNG
     process_fswebcam: subprocess.Popen = subprocess.Popen(
         ['fswebcam', '-d', f'/dev/video{user_config.picture_video_device}', '-r', f'{user_config.picture_width}x{user_config.picture_height}',
-            '--png', '0', '-F', str(common.picture_samples), '--no-banner', '--save', '-'],
+            '--png', '0', '-F', str(user_config.picture_num_samples), '--no-banner', '--save', '-'],
         stdout=subprocess.PIPE)
     # Convert PNG to WEBP
     process_cwebp: subprocess.Popen = subprocess.Popen(
@@ -27,4 +27,5 @@ def take_picture() -> Tuple[Measurement.Picture, bytes]:
     picture_info: Measurement.Picture = Measurement.Picture()
     picture_info.quality = user_config.picture_quality
     picture_info.format = common.picture_format
+    picture_info.num_samples = user_config.picture_num_samples
     return (picture_info, picture_data)

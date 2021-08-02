@@ -15,6 +15,7 @@ picture_take_time: time = time(12, 00)
 picture_width: int = 1920
 picture_height: int = 1080
 picture_quality: int = 100
+picture_num_samples: int = 1
 picture_video_device: int = -1
 enable_monitoring: bool = True
 enable_capacitive_moisture_sensor: bool = True
@@ -38,6 +39,7 @@ def load(file_name):
     global picture_width
     global picture_height
     global picture_quality
+    global picture_num_samples
     global picture_video_device
     global enable_monitoring
     global enable_capacitive_moisture_sensor
@@ -74,6 +76,7 @@ def load(file_name):
             picture_width = config_data.get("picture_width", picture_width)
             picture_height = config_data.get("picture_height", picture_height)
             picture_quality = config_data.get("picture_quality", picture_quality)
+            picture_num_samples = config_data.get("picture_num_samples", picture_num_samples)
             picture_video_device = config_data.get("picture_video_device", picture_video_device)
             enable_monitoring = config_data.get("enable_monitoring", enable_monitoring)
             enable_capacitive_moisture_sensor = config_data.get("enable_capacitive_moisture_sensor", enable_capacitive_moisture_sensor)

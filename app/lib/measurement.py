@@ -164,6 +164,7 @@ class Measurement:
     class Picture:
         format: str
         quality: int
+        num_samples: int
 
     # Values
     capacitive_moisture: CapacitiveMoisture
