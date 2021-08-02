@@ -8,6 +8,6 @@ ssh pi@raspberrypi.local rm -rf /app/future-foods/lib
 rsync -rlt --progress $root_dir/app/* --exclude=__pycache__/ pi@raspberrypi.local:/app/future-foods
 ssh pi@raspberrypi.local sudo mount -o remount,ro /app
 
-if [[ "$1" == "-start" ]]; then
+if [[ "$1" == "--start" ]]; then
 	ssh pi@raspberrypi.local sudo systemctl start future-foods-sensor
 fi
