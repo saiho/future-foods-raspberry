@@ -10,7 +10,7 @@ CREATE TABLE measurement (
 	"owner" varchar(200) NOT NULL,
     create_date timestamptz(6) NOT NULL,
 	"label" varchar(200) NULL,
-	full_content json NULL,
+	full_content jsonb NULL,
 	CONSTRAINT measurement_pk PRIMARY KEY ("owner", create_date)
 );
 
