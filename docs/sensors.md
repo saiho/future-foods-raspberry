@@ -29,7 +29,7 @@
 
 See: https://www.raspberrypi.org/documentation/usage/gpio/
 
-![Pinout Raspberry](https://www.raspberrypi.org/documentation/usage/gpio/images/GPIO-Pinout-Diagram-2.png)
+![Pinout Raspberry](https://www.raspberrypi.org/documentation/computers/images/GPIO-Pinout-Diagram-2.png)
 
 ![Pinout Raspberry Zero](https://www.asw.pt/blog/content/public/upload/rpipinout_0_o.png)
 
