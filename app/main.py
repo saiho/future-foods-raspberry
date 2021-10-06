@@ -49,6 +49,7 @@ if user_config.enable_raspberry_sensor:
     raspberry_sensor.read()  # try reading, ignore result
 if user_config.enable_lights_switch:
     ligths_switch.init()
+    ligths_switch.check()
 
 measurements: List[Measurement] = []
 
