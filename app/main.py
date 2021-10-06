@@ -12,6 +12,7 @@ import lib.bme680_sensor as bme680_sensor
 import lib.scd30_sensor as scd30_sensor
 import lib.as7341_sensor as as7341_sensor
 import lib.camera as camera
+import lib.ligths_switch as ligths_switch
 import lib.database as database
 import lib.common as common
 import lib.user_config as user_config
@@ -46,6 +47,8 @@ if user_config.enable_as7341_sensor:
 if user_config.enable_raspberry_sensor:
     raspberry_sensor.init()
     raspberry_sensor.read()  # try reading, ignore result
+if user_config.enable_lights_switch:
+    ligths_switch.init()
 
 measurements: List[Measurement] = []
 
@@ -77,6 +80,8 @@ try:
             measurement.as7341 = as7341_sensor.read()
         if user_config.enable_raspberry_sensor:
             measurement.raspberry = raspberry_sensor.read()
+        if user_config.enable_lights_switch:
+            measurement.lights_on = ligths_switch.check()
         measurements.append(measurement)
 
         if user_config.enable_picture_take and datetime.now() > picture_take_next:

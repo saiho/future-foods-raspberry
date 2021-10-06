@@ -15,6 +15,11 @@ picture_quality: 100
 picture_num_samples: 5
 picture_video_device: 0
 
+lights_switch_port: 17 # digital port
+lights_switch_on_one: true # if true, setting 1 in the port will turn lights on
+lights_switch_on_time: "9:00"
+lights_switch_off_time: "21:00"
+
 enable_monitoring: true # Set to false to stop measuring everything and posting results
 enable_capacitive_moisture_sensor: true
 enable_si1145_sensor: true
@@ -23,3 +28,4 @@ enable_scd30_sensor: true
 enable_as7341_sensor: true
 enable_raspberry_sensor: true
 enable_picture_take: true
+enable_lights_switch: true

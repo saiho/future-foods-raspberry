@@ -174,6 +174,7 @@ class Measurement:
     as7341: AS7341
     raspberry: Raspberry
     picture: Picture
+    lights_on: bool
 
     # Metadata
     owner: str

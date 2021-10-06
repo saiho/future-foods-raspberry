@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import time
+from datetime import datetime, time
 import yaml
 import __main__
 
@@ -17,6 +17,10 @@ picture_height: int = 1080
 picture_quality: int = 100
 picture_num_samples: int = 1
 picture_video_device: int = -1
+lights_switch_port: int = None
+lights_switch_on_one: bool = True
+lights_switch_on_time: time = time(9, 00)
+lights_switch_off_time: time = time(21, 00)
 enable_monitoring: bool = True
 enable_capacitive_moisture_sensor: bool = True
 enable_si1145_sensor: bool = True
@@ -25,6 +29,7 @@ enable_scd30_sensor: bool = True
 enable_as7341_sensor: bool = True
 enable_raspberry_sensor: bool = True
 enable_picture_take: bool = True
+enable_lights_switch: bool = True
 
 
 def load(file_name):
@@ -41,6 +46,10 @@ def load(file_name):
     global picture_quality
     global picture_num_samples
     global picture_video_device
+    global lights_switch_port
+    global lights_switch_on_one
+    global lights_switch_on_time
+    global lights_switch_off_time
     global enable_monitoring
     global enable_capacitive_moisture_sensor
     global enable_si1145_sensor
@@ -49,6 +58,7 @@ def load(file_name):
     global enable_as7341_sensor
     global enable_raspberry_sensor
     global enable_picture_take
+    global enable_lights_switch
 
     # Load config_file from the directory of the main.py
     main_dir: str = os.path.dirname(os.path.abspath(__main__.__file__))
@@ -63,7 +73,7 @@ def load(file_name):
                 if isinstance(obj, time):
                     return obj
                 else:
-                    return time.fromisoformat(obj)
+                    return datetime.strptime(obj, '%H:%M').time()
 
             owner = config_data.get("owner")
             label = config_data.get("label")
@@ -78,6 +88,10 @@ def load(file_name):
             picture_quality = config_data.get("picture_quality", picture_quality)
             picture_num_samples = config_data.get("picture_num_samples", picture_num_samples)
             picture_video_device = config_data.get("picture_video_device", picture_video_device)
+            lights_switch_port = config_data.get("lights_switch_port", lights_switch_port)
+            lights_switch_on_one = config_data.get("lights_switch_on_one", lights_switch_on_one)
+            lights_switch_on_time = to_time(config_data.get("lights_switch_on_time", lights_switch_on_time))
+            lights_switch_off_time = to_time(config_data.get("lights_switch_off_time", lights_switch_off_time))
             enable_monitoring = config_data.get("enable_monitoring", enable_monitoring)
             enable_capacitive_moisture_sensor = config_data.get("enable_capacitive_moisture_sensor", enable_capacitive_moisture_sensor)
             enable_si1145_sensor = config_data.get("enable_si1145_sensor", enable_si1145_sensor)
@@ -86,5 +100,6 @@ def load(file_name):
             enable_as7341_sensor = config_data.get("enable_as7341_sensor", enable_as7341_sensor)
             enable_raspberry_sensor = config_data.get("enable_raspberry_sensor", enable_raspberry_sensor)
             enable_picture_take = config_data.get("enable_picture_take", enable_picture_take)
+            enable_lights_switch = config_data.get("enable_lights_switch", enable_lights_switch)
         else:
             sys.exit("Configuration file is not valid")

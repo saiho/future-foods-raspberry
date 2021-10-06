@@ -15,6 +15,12 @@
 | MCP3008 | ADC converter that communicates via SPI interface. | https://learn.adafruit.com/reading-a-analog-in-and-controlling-audio-volume-with-the-raspberry-pi/connecting-the-cobbler-to-a-mcp3008 | `adafruit-circuitpython-mcp3xxx` |
 | Grove Base Hat for Raspberry Pi Zero | The Hat includes an ADC converter via SPI interface. https://wiki.seeedstudio.com/Grove_Base_Hat_for_Raspberry_Pi_Zero | | |
 
+# Other
+
+| Name | Information |
+| ---- | ----------- |
+| SPDT Relay (Grove) | https://wiki.seeedstudio.com/Grove-2-Channel_SPDT_Relay/ |
+
 # I2C addresses
 
 | Device    | Address |
