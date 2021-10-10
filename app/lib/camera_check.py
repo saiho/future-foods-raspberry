@@ -10,13 +10,15 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import camera
-from lib import user_config
+from lib.user_config import user_config
+from lib.measurement import Measurement
 
-user_config.load("../config.yml")
+if len(user_config.camera_devices) == 0:
+    sys.exit("No camera device configured")
 
 while True:
-    picture_info, picture_data = camera.take_picture()
-    with open("/tmp/picture." + picture_info.format, "wb") as picture_file:
-        picture_file.write(picture_data)
-        print("Picture saved in /tmp/picture." + picture_info.format)
-    time.sleep(5)
+    picture: Measurement.Picture = camera.take_picture(list(user_config.camera_devices.values())[0])
+    with open("/tmp/picture." + picture.format, "wb") as picture_file:
+        picture_file.write(picture.data)
+        print("Picture saved in /tmp/picture." + picture.format)
+    time.sleep(10)

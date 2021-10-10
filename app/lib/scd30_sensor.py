@@ -38,6 +38,8 @@ def init():
     global temperature_offset_correction_next
     temperature_offset_correction_next = datetime.now() + common.scd30_temperature_offset_correction_interval
 
+    read()  # Test read
+
 
 def close():
     global scd30

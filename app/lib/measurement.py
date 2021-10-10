@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from datetime import datetime
 import statistics
 import json
@@ -33,7 +33,7 @@ class Measurement:
 
         @staticmethod
         def _median(data_list: List[Measurement.CapacitiveMoisture]) -> Measurement.CapacitiveMoisture:
-            if len(data_list) == 0:
+            if not data_list:
                 return None
             median_data: Measurement.CapacitiveMoisture = Measurement.CapacitiveMoisture()
             num_values: int = len(data_list[0].values)
@@ -58,12 +58,13 @@ class Measurement:
 
         @staticmethod
         def _median(data_list: List[Measurement.SCD30]) -> Measurement.SCD30:
-            if len(data_list) == 0:
+            if not data_list:
                 return None
             median_data: Measurement.SCD30 = Measurement.SCD30()
             median_data.co2_ppm, median_data.stdev_co2_ppm = _median_and_stdev([d.co2_ppm for d in data_list])
             median_data.temperature, median_data.stdev_temperature = _median_and_stdev([d.temperature for d in data_list])
-            median_data.temperature_offset, median_data.stdev_temperature_offset = _median_and_stdev([d.temperature_offset for d in data_list])
+            median_data.temperature_offset, median_data.stdev_temperature_offset = _median_and_stdev(
+                [d.temperature_offset for d in data_list])
             median_data.humidity, median_data.stdev_humidity = _median_and_stdev([d.humidity for d in data_list])
             median_data.num_samples = len(data_list)
             median_data.firmware_version = data_list[0].firmware_version
@@ -80,7 +81,7 @@ class Measurement:
 
         @staticmethod
         def _median(data_list: List[Measurement.SI1145]) -> Measurement.SI1145:
-            if len(data_list) == 0:
+            if not data_list:
                 return None
             median_data: Measurement.SI1145 = Measurement.SI1145()
             median_data.sunlight_visible, median_data.stdev_sunlight_visible = _median_and_stdev([d.sunlight_visible for d in data_list])
@@ -102,7 +103,7 @@ class Measurement:
 
         @staticmethod
         def _median(data_list: List[Measurement.BME680]) -> Measurement.BME680:
-            if len(data_list) == 0:
+            if not data_list:
                 return None
             median_data: Measurement.BME680 = Measurement.BME680()
             median_data.temperature, median_data.stdev_temperature = _median_and_stdev([d.temperature for d in data_list])
@@ -133,7 +134,7 @@ class Measurement:
 
         @staticmethod
         def _median(data_list: List[Measurement.AS7341]) -> Measurement.AS7341:
-            if len(data_list) == 0:
+            if not data_list:
                 return None
             median_data: Measurement.AS7341 = Measurement.AS7341()
             median_data.violet_415nm, median_data.stdev_violet_415nm = _median_and_stdev([d.violet_415nm for d in data_list])
@@ -154,7 +155,7 @@ class Measurement:
 
         @staticmethod
         def _median(data_list: List[Measurement.Raspberry]) -> Measurement.Raspberry:
-            if len(data_list) == 0:
+            if not data_list:
                 return None
             median_data: Measurement.Raspberry = Measurement.Raspberry()
             median_data.cpu_temperature, median_data.cpu_temperature_max = _median_and_max([d.cpu_temperature for d in data_list])
@@ -165,6 +166,7 @@ class Measurement:
         format: str
         quality: int
         num_samples: int
+        data: bytes
 
     # Values
     capacitive_moisture: CapacitiveMoisture
@@ -173,8 +175,8 @@ class Measurement:
     scd30: SCD30
     as7341: AS7341
     raspberry: Raspberry
-    picture: Picture
-    lights_on: bool
+    pictures: Dict[str, Picture]
+    relays_on: Dict[str, bool]
 
     # Metadata
     owner: str
@@ -192,10 +194,30 @@ class Measurement:
         self.measured_to = datetime.now()
         self.count_since_start = None
 
+    @staticmethod
+    # Return the last picture
+    def _combine_pictures(data_list: List[Dict[str, Picture]]) -> Dict[str, Picture]:
+        if not data_list:
+            return None
+        return data_list[-1]
+
+    @staticmethod
+    # When aggregating, consider relay on if there is a majority of measurements as on
+    def _combine_relays_on(data_list: List[Dict[str, bool]]) -> Dict[str, bool]:
+        if not data_list:
+            return None
+        median_data: Dict[str, bool] = {}
+        for k in data_list[0]:
+            k_values = [d[k] for d in data_list]
+            median_data[k] = k_values.count(True) > k_values.count(False)
+        return median_data
+
     def as_json(self) -> str:
         def json_converter(o):
             if isinstance(o, datetime):
                 return o.astimezone().isoformat()
+            elif isinstance(o, bytes):
+                return None
             else:
                 return o.__dict__
         return json.dumps(self.__dict__, default=json_converter)
@@ -203,7 +225,7 @@ class Measurement:
     @staticmethod
     def combine(measurements: List[Measurement]) -> Measurement:
 
-        if len(measurements) == 0:
+        if not measurements:
             return None
 
         combined_measurement: Measurement = Measurement()
@@ -215,6 +237,8 @@ class Measurement:
         combined_measurement.scd30 = Measurement.SCD30._median([m.scd30 for m in measurements if m.scd30])
         combined_measurement.as7341 = Measurement.AS7341._median([m.as7341 for m in measurements if m.as7341])
         combined_measurement.raspberry = Measurement.Raspberry._median([m.raspberry for m in measurements if m.raspberry])
+        combined_measurement.pictures = Measurement._combine_pictures([m.pictures for m in measurements if m.pictures])
+        combined_measurement.relays_on = Measurement._combine_relays_on([m.relays_on for m in measurements if m.relays_on])
 
         combined_measurement.owner = measurements[0].owner
         combined_measurement.label = measurements[0].label

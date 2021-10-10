@@ -12,6 +12,7 @@ def init():
     global cpu
     print("Init CPU check")
     cpu = CPUTemperature()
+    read()  # Test read
 
 
 def read() -> Measurement.Raspberry:

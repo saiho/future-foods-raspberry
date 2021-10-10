@@ -95,6 +95,7 @@ CREATE TABLE measurement_as7341 (
 CREATE TABLE measurement_picture (
     "owner" varchar(200) NOT NULL,
     create_date timestamptz(6) NOT NULL,
-    picture_1 bytea NULL,
-    CONSTRAINT measurement_picture_pk PRIMARY KEY ("owner", create_date)
+    tag varchar(200) NOT NULL,
+    picture bytea NULL,
+    CONSTRAINT measurement_picture_pk PRIMARY KEY ("owner", create_date, tag)
 );

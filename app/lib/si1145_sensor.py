@@ -12,6 +12,7 @@ def init():
     global si1145
     print("Init SI1145 sensor")
     si1145 = seeed_si114x.grove_si114x()
+    read()  # Test read
 
 
 def read() -> Measurement.SI1145:

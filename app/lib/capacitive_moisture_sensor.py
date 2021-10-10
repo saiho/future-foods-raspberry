@@ -12,6 +12,7 @@ def init():
     global adc
     print("Init ADC channel")
     adc = ADC()
+    read()  # Test read
 
 
 def read() -> Measurement.CapacitiveMoisture:

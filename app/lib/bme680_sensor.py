@@ -27,6 +27,8 @@ def init():
     bme680_sensor.set_gas_heater_duration(150)
     bme680_sensor.select_gas_heater_profile(0)
 
+    read()  # Test read
+
 
 def read() -> Measurement.BME680:
     global bme680_sensor

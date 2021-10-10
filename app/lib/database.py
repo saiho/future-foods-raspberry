@@ -1,11 +1,11 @@
 import psycopg2
 from lib.measurement import Measurement
-from lib import user_config
+from lib.user_config import user_config
 
 count_since_start: int = 0
 
 
-def insert_data(measurement: Measurement, picture_data: bytes):
+def insert_data(measurement: Measurement):
     global count_since_start
 
     count_since_start = count_since_start + 1
@@ -137,16 +137,17 @@ def insert_data(measurement: Measurement, picture_data: bytes):
             measurement.as7341.stdev_red_680nm
         ))
 
-    if picture_data:
+    for k, p in measurement.pictures.items():
         print("Inserting measurement_picture")
         cursor.execute("""
             INSERT INTO measurement_picture
-                ("owner", create_date, picture_1)
+                ("owner", create_date, tag, picture)
             VALUES
-                (%s, %s, %s)""", (
+                (%s, %s, %s, %s)""", (
             measurement.owner,
             create_date,
-            picture_data
+            k,
+            p.data
         ))
 
     connection.commit()

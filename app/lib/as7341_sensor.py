@@ -13,6 +13,7 @@ def init():
     global as7341
     print("Init AS7341 sensor")
     as7341 = AS7341(board.I2C())
+    read()  # Test read
 
 
 def read() -> Measurement.AS7341():

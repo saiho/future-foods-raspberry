@@ -1,105 +1,147 @@
+from typing import Dict
 import sys
 import os
 from datetime import datetime, time
 import yaml
-import __main__
 
-owner: str
-label: str
-database_host: str
-database_port: int
-database_name: str
-database_user: str
-database_password: str
-picture_take_time: time = time(12, 00)
-picture_width: int = 1920
-picture_height: int = 1080
-picture_quality: int = 100
-picture_num_samples: int = 1
-picture_video_device: int = -1
-lights_switch_port: int = None
-lights_switch_on_one: bool = True
-lights_switch_on_time: time = time(9, 00)
-lights_switch_off_time: time = time(21, 00)
-enable_monitoring: bool = True
-enable_capacitive_moisture_sensor: bool = True
-enable_si1145_sensor: bool = True
-enable_bme680_sensor: bool = True
-enable_scd30_sensor: bool = True
-enable_as7341_sensor: bool = True
-enable_raspberry_sensor: bool = True
-enable_picture_take: bool = True
-enable_lights_switch: bool = True
+CONFIG_FILE_NAME = "../config.yml"
 
 
-def load(file_name):
-    global owner
-    global label
-    global database_host
-    global database_port
-    global database_name
-    global database_user
-    global database_password
-    global picture_take_time
-    global picture_width
-    global picture_height
-    global picture_quality
-    global picture_num_samples
-    global picture_video_device
-    global lights_switch_port
-    global lights_switch_on_one
-    global lights_switch_on_time
-    global lights_switch_off_time
-    global enable_monitoring
-    global enable_capacitive_moisture_sensor
-    global enable_si1145_sensor
-    global enable_bme680_sensor
-    global enable_scd30_sensor
-    global enable_as7341_sensor
-    global enable_raspberry_sensor
-    global enable_picture_take
-    global enable_lights_switch
+def _to_time(obj) -> time:
+    if obj is None:
+        return None
+    elif isinstance(obj, time):
+        return obj
+    else:
+        return datetime.strptime(obj, "%H:%M").time()
 
-    # Load config_file from the directory of the main.py
-    main_dir: str = os.path.dirname(os.path.abspath(__main__.__file__))
-    config_path: str = os.path.join(main_dir, file_name)
+# Convert keys with dots in multiline sections. For example:
+#
+# camera.enabled: true
+# camera.take_time: "18:00"
+#
+# Is treated as:
+#
+# camera:
+#   enabled: true
+#   take_time: "18:00"
+#
 
-    with open(config_path) as config_file:
 
+def _split_dot_keys(obj):
+    if isinstance(obj, dict):
+        for key in [key for key in obj if isinstance(key, str) and ("." in key)]:
+            value = obj.pop(key)
+            subkey1, subkey2 = key.split(".", 1)
+            if subkey1 in obj:
+                obj[subkey1][subkey2] = value
+            else:
+                obj[subkey1] = {subkey2: value}
+        for value in obj.values():
+            _split_dot_keys(value)
+
+    elif isinstance(obj, list):
+        for value in obj:
+            _split_dot_keys(value)
+
+
+class Config:
+
+    class Database:
+        host: str
+        port: int
+        name: str
+        user: str
+        password: str
+
+        def __init__(self, config_data: dict):
+            self.host = config_data.get("host")
+            self.port = config_data.get("port")
+            self.name = config_data.get("name")
+            self.user = config_data.get("user")
+            self.password = config_data.get("password")
+
+    class CameraDevice:
+        video_device: int
+        width: int
+        height: int
+        quality: int
+        num_samples: int
+
+        def __init__(self, config_data: dict):
+            self.video_device = config_data.get("video_device", -1)
+            self.width = config_data.get("width", 1920)
+            self.height = config_data.get("height", 1080)
+            self.quality = config_data.get("quality", 100)
+            self.num_samples = config_data.get("num_samples", 1)
+
+    class RelaySwitchDevice:
+        port: int
+        on_time: time
+        off_time: time
+        on_as_one: bool
+
+        def __init__(self, config_data: dict):
+            self.port = config_data.get("port")
+            self.on_time = _to_time(config_data.get("on_time"))
+            self.off_time = _to_time(config_data.get("off_time"))
+            self.on_as_one = config_data.get("on_as_one", True)
+
+    owner: str
+    label: str
+
+    database: Database
+
+    monitoring_enabled: bool
+    capacitive_moisture_sensor_enabled: bool
+    si1145_sensor_enabled: bool
+    bme680_sensor_enabled: bool
+    scd30_sensor_enabled: bool
+    as7341_sensor_enabled: bool
+    raspberry_sensor_enabled: bool
+
+    camera_enabled: bool
+    camera_take_time: time
+    camera_devices: Dict[str, CameraDevice]
+
+    relay_switch_enabled: bool
+    relay_switch_devices: Dict[str, RelaySwitchDevice]
+
+    def __init__(self, config_data: dict):
+
+        self.owner = config_data.get("owner")
+        self.label = config_data.get("label")
+
+        self.database = Config.Database(config_data.get("database", {}))
+
+        self.monitoring_enabled = config_data.get("monitoring", {}).get("enabled", True)
+        self.capacitive_moisture_sensor_enabled = config_data.get("capacitive_moisture_sensor", {}).get("enabled", True)
+        self.si1145_sensor_enabled = config_data.get("si1145_sensor", {}).get("enabled", True)
+        self.bme680_sensor_enabled = config_data.get("bme680_sensor", {}).get("enabled", True)
+        self.scd30_sensor_enabled = config_data.get("scd30_sensor", {}).get("enabled", True)
+        self.as7341_sensor_enabled = config_data.get("as7341_sensor", {}).get("enabled", True)
+        self.raspberry_sensor_enabled = config_data.get("raspberry_sensor", {}).get("enabled", True)
+
+        camera_config_data: dict = config_data.get("camera", {})
+        self.camera_enabled = camera_config_data.get("enabled", True)
+        self.camera_take_time = _to_time(camera_config_data.get("take_time", time(12, 00)))
+        self.camera_devices = {k: Config.CameraDevice(d) for k, d in camera_config_data.get("devices", {}).items()}
+
+        relay_switch_config_data: dict = config_data.get("relay_switch", {})
+        self.relay_switch_enabled = relay_switch_config_data.get("enabled", True)
+        self.relay_switch_devices = {k: Config.RelaySwitchDevice(d) for k, d in relay_switch_config_data.get("devices", {}).items()}
+
+
+user_config: Config
+
+# Load CONFIG_FILE_NAME from the directory of the main.py
+main_dir: str = os.path.dirname(os.path.abspath(__file__))
+config_path: str = os.path.join(main_dir, CONFIG_FILE_NAME)
+
+with open(config_path) as config_file:
+    try:
         config_data = yaml.safe_load(config_file)
-
-        if isinstance(config_data, dict):
-            def to_time(obj) -> time:
-                if isinstance(obj, time):
-                    return obj
-                else:
-                    return datetime.strptime(obj, '%H:%M').time()
-
-            owner = config_data.get("owner")
-            label = config_data.get("label")
-            database_host = config_data.get("database_host")
-            database_port = config_data.get("database_port")
-            database_name = config_data.get("database_name")
-            database_user = config_data.get("database_user")
-            database_password = config_data.get("database_password")
-            picture_take_time = to_time(config_data.get("picture_take_time", picture_take_time))
-            picture_width = config_data.get("picture_width", picture_width)
-            picture_height = config_data.get("picture_height", picture_height)
-            picture_quality = config_data.get("picture_quality", picture_quality)
-            picture_num_samples = config_data.get("picture_num_samples", picture_num_samples)
-            picture_video_device = config_data.get("picture_video_device", picture_video_device)
-            lights_switch_port = config_data.get("lights_switch_port", lights_switch_port)
-            lights_switch_on_one = config_data.get("lights_switch_on_one", lights_switch_on_one)
-            lights_switch_on_time = to_time(config_data.get("lights_switch_on_time", lights_switch_on_time))
-            lights_switch_off_time = to_time(config_data.get("lights_switch_off_time", lights_switch_off_time))
-            enable_monitoring = config_data.get("enable_monitoring", enable_monitoring)
-            enable_capacitive_moisture_sensor = config_data.get("enable_capacitive_moisture_sensor", enable_capacitive_moisture_sensor)
-            enable_si1145_sensor = config_data.get("enable_si1145_sensor", enable_si1145_sensor)
-            enable_bme680_sensor = config_data.get("enable_bme680_sensor", enable_bme680_sensor)
-            enable_scd30_sensor = config_data.get("enable_scd30_sensor", enable_scd30_sensor)
-            enable_as7341_sensor = config_data.get("enable_as7341_sensor", enable_as7341_sensor)
-            enable_raspberry_sensor = config_data.get("enable_raspberry_sensor", enable_raspberry_sensor)
-            enable_picture_take = config_data.get("enable_picture_take", enable_picture_take)
-            enable_lights_switch = config_data.get("enable_lights_switch", enable_lights_switch)
-        else:
-            sys.exit("Configuration file is not valid")
+        _split_dot_keys(config_data)
+        user_config = Config(config_data)
+    except:
+        sys.exit("Configuration file is not valid")
