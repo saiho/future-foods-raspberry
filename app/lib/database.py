@@ -137,18 +137,19 @@ def insert_data(measurement: Measurement):
             measurement.as7341.stdev_red_680nm
         ))
 
-    for k, p in measurement.pictures.items():
-        print("Inserting measurement_picture")
-        cursor.execute("""
-            INSERT INTO measurement_picture
-                ("owner", create_date, tag, picture)
-            VALUES
-                (%s, %s, %s, %s)""", (
-            measurement.owner,
-            create_date,
-            k,
-            p.data
-        ))
+    if measurement.pictures:
+        for k, p in measurement.pictures.items():
+            print("Inserting measurement_picture")
+            cursor.execute("""
+                INSERT INTO measurement_picture
+                    ("owner", create_date, tag, picture)
+                VALUES
+                    (%s, %s, %s, %s)""", (
+                measurement.owner,
+                create_date,
+                k,
+                p.data
+            ))
 
     connection.commit()
     cursor.close()
