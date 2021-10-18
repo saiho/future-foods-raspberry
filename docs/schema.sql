@@ -1,11 +1,3 @@
--- DROP TABLE measurement ;
--- DROP TABLE measurement_soil_moisture ;
--- DROP TABLE measurement_si1145 ;
--- DROP TABLE measurement_bme680 ;
--- DROP TABLE measurement_scd30 ;
--- DROP TABLE measurement_as7341 ;
--- DROP TABLE measurement_picture ;
-
 CREATE TABLE measurement (
 	"owner" varchar(200) NOT NULL,
     create_date timestamptz(6) NOT NULL,
@@ -19,16 +11,22 @@ CREATE TABLE measurement_soil_moisture (
     create_date timestamptz(6) NOT NULL,
     value_1 numeric(30,12) NULL,
     stdev_1 numeric(30,12) NULL,
+    tag_1 varchar(200) NULL,
     value_2 numeric(30,12) NULL,
     stdev_2 numeric(30,12) NULL,
+    tag_2 varchar(200) NULL,
     value_3 numeric(30,12) NULL,
     stdev_3 numeric(30,12) NULL,
+    tag_3 varchar(200) NULL,
     value_4 numeric(30,12) NULL,
     stdev_4 numeric(30,12) NULL,
+    tag_4 varchar(200) NULL,
     value_5 numeric(30,12) NULL,
     stdev_5 numeric(30,12) NULL,
+    tag_5 varchar(200) NULL,
     value_6 numeric(30,12) NULL,
     stdev_6 numeric(30,12) NULL,
+    tag_6 varchar(200) NULL,
     CONSTRAINT measurement_soil_moisture_pk PRIMARY KEY ("owner", create_date)
 );
 

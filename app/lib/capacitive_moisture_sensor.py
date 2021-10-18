@@ -1,5 +1,7 @@
+from typing import Dict
 from grove.adc import ADC
 from lib.measurement import Measurement
+from lib.user_config import user_config
 
 #
 # Grove capacitive moisture sensor
@@ -15,15 +17,12 @@ def init():
     read()  # Test read
 
 
-def read() -> Measurement.CapacitiveMoisture:
+def read() -> Dict[str, Measurement.CapacitiveMoisture]:
     global adc
-    data = Measurement.CapacitiveMoisture()
-    data.values = [
-        adc.read_voltage(0),
-        adc.read_voltage(1),
-        adc.read_voltage(2),
-        adc.read_voltage(3),
-        adc.read_voltage(4),
-        adc.read_voltage(5)]
-    print("Moisture values: ", data.values)
+    data: Dict[str, Measurement.CapacitiveMoisture] = {}
+    for key, sensor in user_config.capacitive_moisture_sensors.items():
+        data[key] = Measurement.CapacitiveMoisture()
+        data[key].value = adc.read_voltage(sensor.port)
+        data[key].port = sensor.port
+    print("Moisture values:", {key: sensor.value for key, sensor in data.items()})
     return data

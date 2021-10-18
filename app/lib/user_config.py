@@ -61,6 +61,12 @@ class Config:
             self.user = config_data.get("user")
             self.password = config_data.get("password")
 
+    class CapacitiveMoistureSensor:
+        port: int
+
+        def __init__(self, config_data: dict):
+            self.port = config_data.get("port")
+
     class CameraDevice:
         video_device: int
         width: int
@@ -100,6 +106,8 @@ class Config:
     as7341_sensor_enabled: bool
     raspberry_sensor_enabled: bool
 
+    capacitive_moisture_sensors: Dict[str, CapacitiveMoistureSensor]
+
     camera_enabled: bool
     camera_take_time: time
     camera_devices: Dict[str, CameraDevice]
@@ -115,7 +123,12 @@ class Config:
         self.database = Config.Database(config_data.get("database", {}))
 
         self.monitoring_enabled = config_data.get("monitoring", {}).get("enabled", True)
-        self.capacitive_moisture_sensor_enabled = config_data.get("capacitive_moisture_sensor", {}).get("enabled", True)
+
+        capacitive_moisture_config_data: dict = config_data.get("capacitive_moisture_sensor", {})
+        self.capacitive_moisture_sensor_enabled = capacitive_moisture_config_data.get("enabled", True)
+        self.capacitive_moisture_sensors = {
+            key: Config.CapacitiveMoistureSensor(sensor) for key, sensor in capacitive_moisture_config_data.get("devices", {}).items()}
+
         self.si1145_sensor_enabled = config_data.get("si1145_sensor", {}).get("enabled", True)
         self.bme680_sensor_enabled = config_data.get("bme680_sensor", {}).get("enabled", True)
         self.scd30_sensor_enabled = config_data.get("scd30_sensor", {}).get("enabled", True)
@@ -125,11 +138,12 @@ class Config:
         camera_config_data: dict = config_data.get("camera", {})
         self.camera_enabled = camera_config_data.get("enabled", True)
         self.camera_take_time = _to_time(camera_config_data.get("take_time", time(12, 00)))
-        self.camera_devices = {k: Config.CameraDevice(d) for k, d in camera_config_data.get("devices", {}).items()}
+        self.camera_devices = {key: Config.CameraDevice(camera) for key, camera in camera_config_data.get("devices", {}).items()}
 
         relay_switch_config_data: dict = config_data.get("relay_switch", {})
         self.relay_switch_enabled = relay_switch_config_data.get("enabled", True)
-        self.relay_switch_devices = {k: Config.RelaySwitchDevice(d) for k, d in relay_switch_config_data.get("devices", {}).items()}
+        self.relay_switch_devices = {
+            key: Config.RelaySwitchDevice(relay) for key, relay in relay_switch_config_data.get("devices", {}).items()}
 
 
 user_config: Config

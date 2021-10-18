@@ -27,22 +27,24 @@ def _median_and_max(values: list) -> Tuple[float, float]:
 class Measurement:
 
     class CapacitiveMoisture:
-        values: List[int]
-        stdevs: List[float]
+        value: float
+        stdev: float
         num_samples: int
+        port: int
 
         @staticmethod
-        def _median(data_list: List[Measurement.CapacitiveMoisture]) -> Measurement.CapacitiveMoisture:
+        def _median(data_list: List[Dict[str, Measurement.CapacitiveMoisture]]) -> Dict[str, Measurement.CapacitiveMoisture]:
             if not data_list:
                 return None
-            median_data: Measurement.CapacitiveMoisture = Measurement.CapacitiveMoisture()
-            num_values: int = len(data_list[0].values)
-            median_data.values = [None] * num_values
-            median_data.stdevs = [None] * num_values
-            for i in range(num_values):
-                median_data.values[i], median_data.stdevs[i] = _median_and_stdev([d.values[i] for d in data_list])
-            median_data.num_samples = len(data_list)
-            return median_data
+            median_data_dict: Dict[str, Measurement.CapacitiveMoisture] = {}
+            for key in data_list[0]:
+                values = [d[key].value for d in data_list]
+                median_data = Measurement.CapacitiveMoisture()
+                median_data.value, median_data.stdev = _median_and_stdev(values)
+                median_data.num_samples = len(data_list)
+                median_data.port = data_list[0][key].port
+                median_data_dict[key] = median_data
+            return median_data_dict
 
     class SCD30:
         co2_ppm: float
@@ -169,8 +171,15 @@ class Measurement:
         data: bytes
         video_device: int
 
+        @staticmethod
+        # Return the last picture
+        def _combine(data_list: List[Dict[str, Measurement.Picture]]) -> Dict[str, Measurement.Picture]:
+            if not data_list:
+                return None
+            return data_list[-1]
+
     # Values
-    capacitive_moisture: CapacitiveMoisture
+    capacitive_moisture: Dict[str, CapacitiveMoisture]
     si1145: SI1145
     bme680: BME680
     scd30: SCD30
@@ -196,32 +205,15 @@ class Measurement:
         self.count_since_start = None
 
     @staticmethod
-    # Return the last picture
-    def _combine_pictures(data_list: List[Dict[str, Picture]]) -> Dict[str, Picture]:
-        if not data_list:
-            return None
-        return data_list[-1]
-
-    @staticmethod
     # When aggregating, consider relay on if there is a majority of measurements as on
     def _combine_relays_on(data_list: List[Dict[str, bool]]) -> Dict[str, bool]:
         if not data_list:
             return None
-        median_data: Dict[str, bool] = {}
-        for k in data_list[0]:
-            k_values = [d[k] for d in data_list]
-            median_data[k] = k_values.count(True) > k_values.count(False)
-        return median_data
-
-    def as_json(self) -> str:
-        def json_converter(o):
-            if isinstance(o, datetime):
-                return o.astimezone().isoformat()
-            elif isinstance(o, bytes):
-                return None
-            else:
-                return o.__dict__
-        return json.dumps(self.__dict__, default=json_converter)
+        median_data_dict: Dict[str, bool] = {}
+        for key in data_list[0]:
+            values = [d[key] for d in data_list]
+            median_data_dict[key] = values.count(True) > values.count(False)
+        return median_data_dict
 
     @staticmethod
     def combine(measurements: List[Measurement]) -> Measurement:
@@ -238,7 +230,7 @@ class Measurement:
         combined_measurement.scd30 = Measurement.SCD30._median([m.scd30 for m in measurements if m.scd30])
         combined_measurement.as7341 = Measurement.AS7341._median([m.as7341 for m in measurements if m.as7341])
         combined_measurement.raspberry = Measurement.Raspberry._median([m.raspberry for m in measurements if m.raspberry])
-        combined_measurement.pictures = Measurement._combine_pictures([m.pictures for m in measurements if m.pictures])
+        combined_measurement.pictures = Measurement.Picture._combine([m.pictures for m in measurements if m.pictures])
         combined_measurement.relays_on = Measurement._combine_relays_on([m.relays_on for m in measurements if m.relays_on])
 
         combined_measurement.owner = measurements[0].owner
@@ -249,3 +241,13 @@ class Measurement:
         combined_measurement.count_since_start = measurements[0].count_since_start
 
         return combined_measurement
+
+    def as_json(self) -> str:
+        def json_converter(o):
+            if isinstance(o, datetime):
+                return o.astimezone().isoformat()
+            elif isinstance(o, bytes):
+                return None
+            else:
+                return o.__dict__
+        return json.dumps(self.__dict__, default=json_converter)

@@ -27,7 +27,7 @@ def take_pictures_if_scheduled() -> Dict[str, Measurement.Picture]:
     picture_take_next = picture_take_next + common.picture_take_interval
     print("Next picture to be taken at", picture_take_next.astimezone())
 
-    return {k: take_picture(d) for k, d in user_config.camera_devices.items()}
+    return {key: take_picture(camera) for key, camera in user_config.camera_devices.items()}
 
 
 def take_picture(device_config: Config.CameraDevice) -> Measurement.Picture:

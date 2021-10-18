@@ -1,3 +1,4 @@
+from typing import List
 import psycopg2
 from lib.measurement import Measurement
 from lib.user_config import user_config
@@ -36,25 +37,39 @@ def insert_data(measurement: Measurement):
 
     if measurement.capacitive_moisture:
         print("Inserting measurement_soil_moisture")
+        capacitive_moisture_values: List[float] = [None] * 6
+        capacitive_moisture_stdevs: List[float] = [None] * 6
+        capacitive_moisture_tags: List[str] = [None] * 6
+        for key, sensor in measurement.capacitive_moisture.items():
+            if sensor.port < 6:
+                capacitive_moisture_values[sensor.port] = sensor.value
+                capacitive_moisture_stdevs[sensor.port] = sensor.stdev
+                capacitive_moisture_tags[sensor.port] = key
         cursor.execute("""
             INSERT INTO measurement_soil_moisture
-                ("owner", create_date, value_1, stdev_1, value_2, stdev_2, value_3, stdev_3, value_4, stdev_4, value_5, stdev_5, value_6, stdev_6)
+                ("owner", create_date, value_1, stdev_1, tag_1, value_2, stdev_2, tag_2, value_3, stdev_3, tag_3, value_4, stdev_4, tag_4, value_5, stdev_5, tag_5, value_6, stdev_6, tag_6)
             VALUES
-                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", (
+                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""", (
             measurement.owner,
             create_date,
-            measurement.capacitive_moisture.values[0],
-            measurement.capacitive_moisture.stdevs[0],
-            measurement.capacitive_moisture.values[1],
-            measurement.capacitive_moisture.stdevs[1],
-            measurement.capacitive_moisture.values[2],
-            measurement.capacitive_moisture.stdevs[2],
-            measurement.capacitive_moisture.values[3],
-            measurement.capacitive_moisture.stdevs[3],
-            measurement.capacitive_moisture.values[4],
-            measurement.capacitive_moisture.stdevs[4],
-            measurement.capacitive_moisture.values[5],
-            measurement.capacitive_moisture.stdevs[5]
+            capacitive_moisture_values[0],
+            capacitive_moisture_stdevs[0],
+            capacitive_moisture_tags[0],
+            capacitive_moisture_values[1],
+            capacitive_moisture_stdevs[1],
+            capacitive_moisture_tags[1],
+            capacitive_moisture_values[2],
+            capacitive_moisture_stdevs[2],
+            capacitive_moisture_tags[2],
+            capacitive_moisture_values[3],
+            capacitive_moisture_stdevs[3],
+            capacitive_moisture_tags[3],
+            capacitive_moisture_values[4],
+            capacitive_moisture_stdevs[4],
+            capacitive_moisture_tags[4],
+            capacitive_moisture_values[5],
+            capacitive_moisture_stdevs[5],
+            capacitive_moisture_tags[5]
         ))
 
     if measurement.si1145:
@@ -138,8 +153,8 @@ def insert_data(measurement: Measurement):
         ))
 
     if measurement.pictures:
-        for k, p in measurement.pictures.items():
-            print("Inserting measurement_picture")
+        print("Inserting measurement_picture")
+        for key, pict in measurement.pictures.items():
             cursor.execute("""
                 INSERT INTO measurement_picture
                     ("owner", create_date, tag, picture)
@@ -147,8 +162,8 @@ def insert_data(measurement: Measurement):
                     (%s, %s, %s, %s)""", (
                 measurement.owner,
                 create_date,
-                k,
-                p.data
+                key,
+                pict.data
             ))
 
     connection.commit()

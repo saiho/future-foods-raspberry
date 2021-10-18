@@ -9,11 +9,26 @@ database.user: your_db_user
 database.password: "your_db_password"
 
 monitoring.enabled: true # Set to false to stop measuring everything and posting results
+
 capacitive_moisture_sensor.enabled: true
+capacitive_moisture_sensor.devices:
+  basil:
+    port: 0
+  pepper:
+    port: 1
+  kohlrabi:
+    port: 2
+  cherry_tomato:
+    port: 3
+
 si1145_sensor.enabled: true
+
 bme680_sensor.enabled: true
+
 scd30_sensor.enabled: true
+
 as7341_sensor.enabled: true
+
 raspberry_sensor.enabled: true
 
 camera.enabled: true
