@@ -70,10 +70,10 @@ def read(real_temperature: float = None) -> Measurement.SCD30:
                 data.firmware_version = firmware_version
 
                 # Reajust temperature offset
-                if real_temperature and datetime.now() > temperature_offset_correction_next:
+                if real_temperature is not None and datetime.now() > temperature_offset_correction_next:
                     temperature_offset_correction_next = datetime.now() + common.scd30_temperature_offset_correction_interval
                     data.temperature_offset = data.temperature + scd30.get_temperature_offset() - real_temperature
-                    print("Recalculated offset temperature ", data.temperature_offset)
+                    print("Recalculated offset temperature", data.temperature_offset)
                     if data.temperature_offset < 0:
                         data.temperature_offset = 0
                     if data.temperature_offset > common.scd30_temperature_offset_max:
