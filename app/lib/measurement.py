@@ -167,6 +167,7 @@ class Measurement:
         quality: int
         num_samples: int
         data: bytes
+        video_device: int
 
     # Values
     capacitive_moisture: CapacitiveMoisture

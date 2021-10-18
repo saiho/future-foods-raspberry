@@ -37,6 +37,7 @@ def take_picture(device_config: Config.CameraDevice) -> Measurement.Picture:
     picture.quality = device_config.quality
     picture.format = common.picture_format
     picture.num_samples = device_config.num_samples
+    picture.video_device = device_config.video_device
 
     # Take picture as PNG
     process_fswebcam: subprocess.Popen = subprocess.Popen(
