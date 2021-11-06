@@ -73,6 +73,7 @@ class Config:
         height: int
         quality: int
         num_samples: int
+        rotation: int
 
         def __init__(self, config_data: dict):
             self.video_device = config_data.get("video_device", -1)
@@ -80,6 +81,7 @@ class Config:
             self.height = config_data.get("height", 1080)
             self.quality = config_data.get("quality", 100)
             self.num_samples = config_data.get("num_samples", 1)
+            self.rotation = config_data.get("rotation", 0)
 
     class RelaySwitchDevice:
         port: int

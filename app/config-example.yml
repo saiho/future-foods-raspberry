@@ -40,6 +40,7 @@ camera.devices:
     height: 1080
     quality: 100
     num_samples: 5
+    rotation: 0
 
 relay_switch.enabled: true
 relay_switch.devices:

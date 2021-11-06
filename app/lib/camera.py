@@ -41,7 +41,8 @@ def take_picture(device_config: Config.CameraDevice) -> Measurement.Picture:
 
     # Take picture as PNG
     process_fswebcam: subprocess.Popen = subprocess.Popen(
-        ["fswebcam", "-d", f"/dev/video{device_config.video_device}", "-r", f"{device_config.width}x{device_config.height}", "--png", "0", "-F", str(device_config.num_samples), "--no-banner", "--save", "-"], stdout=subprocess.PIPE)
+        ["fswebcam", "-d", f"/dev/video{device_config.video_device}", "-r", f"{device_config.width}x{device_config.height}", "--png", "0",
+         "-F", str(device_config.num_samples), "--no-banner", "--rotate", str(device_config.rotation), "--save", "-"], stdout=subprocess.PIPE)
     # Convert PNG to WEBP
     process_cwebp: subprocess.Popen = subprocess.Popen(
         ["cwebp", "-q", str(device_config.quality), "-o", "-", "--", "-"], stdin=process_fswebcam.stdout, stdout=subprocess.PIPE)
