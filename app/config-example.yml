@@ -26,6 +26,7 @@ si1145_sensor.enabled: true
 bme680_sensor.enabled: true
 
 scd30_sensor.enabled: true
+scd30_sensor.auto_self_calibration: true
 
 as7341_sensor.enabled: true
 

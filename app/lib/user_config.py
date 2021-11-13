@@ -15,20 +15,19 @@ def _to_time(obj) -> time:
     else:
         return datetime.strptime(obj, "%H:%M").time()
 
-# Convert keys with dots in multiline sections. For example:
-#
-# camera.enabled: true
-# camera.take_time: "18:00"
-#
-# Is treated as:
-#
-# camera:
-#   enabled: true
-#   take_time: "18:00"
-#
-
 
 def _split_dot_keys(obj):
+    # Convert keys with dots in multiline sections. For example:
+    #
+    # camera.enabled: true
+    # camera.take_time: "18:00"
+    #
+    # Is treated as:
+    #
+    # camera:
+    #   enabled: true
+    #   take_time: "18:00"
+    #
     if isinstance(obj, dict):
         for key in [key for key in obj if isinstance(key, str) and ("." in key)]:
             value = obj.pop(key)
@@ -101,14 +100,20 @@ class Config:
     database: Database
 
     monitoring_enabled: bool
-    capacitive_moisture_sensor_enabled: bool
-    si1145_sensor_enabled: bool
-    bme680_sensor_enabled: bool
-    scd30_sensor_enabled: bool
-    as7341_sensor_enabled: bool
-    raspberry_sensor_enabled: bool
 
+    capacitive_moisture_sensor_enabled: bool
     capacitive_moisture_sensors: Dict[str, CapacitiveMoistureSensor]
+
+    si1145_sensor_enabled: bool
+
+    bme680_sensor_enabled: bool
+
+    scd30_sensor_enabled: bool
+    scd30_auto_self_calibration: bool
+
+    as7341_sensor_enabled: bool
+
+    raspberry_sensor_enabled: bool
 
     camera_enabled: bool
     camera_take_time: time
@@ -132,9 +137,15 @@ class Config:
             key: Config.CapacitiveMoistureSensor(sensor) for key, sensor in capacitive_moisture_config_data.get("devices", {}).items()}
 
         self.si1145_sensor_enabled = config_data.get("si1145_sensor", {}).get("enabled", True)
+
         self.bme680_sensor_enabled = config_data.get("bme680_sensor", {}).get("enabled", True)
-        self.scd30_sensor_enabled = config_data.get("scd30_sensor", {}).get("enabled", True)
+
+        scd30_config_data: dict = config_data.get("scd30_sensor", {})
+        self.scd30_sensor_enabled = scd30_config_data.get("enabled", True)
+        self.scd30_auto_self_calibration = scd30_config_data.get("auto_self_calibration", True)
+
         self.as7341_sensor_enabled = config_data.get("as7341_sensor", {}).get("enabled", True)
+
         self.raspberry_sensor_enabled = config_data.get("raspberry_sensor", {}).get("enabled", True)
 
         camera_config_data: dict = config_data.get("camera", {})

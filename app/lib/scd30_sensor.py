@@ -3,6 +3,7 @@ import time
 import scd30_i2c
 from lib import common
 from lib.measurement import Measurement
+from lib.user_config import user_config
 
 #
 # CO₂, temperature & humidity sensor (SCD30)
@@ -31,7 +32,7 @@ def init():
 
     scd30.set_measurement_interval(int(common.measurement_interval.total_seconds()))
     scd30.set_temperature_offset(0)
-    scd30.set_auto_self_calibration(True)
+    scd30.set_auto_self_calibration(user_config.scd30_auto_self_calibration)
     scd30.start_periodic_measurement()
     print(f"SCD30 Started measuring every {scd30.get_measurement_interval()} seconds")
 
