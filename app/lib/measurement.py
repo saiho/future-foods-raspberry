@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import List, Tuple, Dict
+import sys
+import traceback
 from datetime import datetime
 import statistics
 import json
@@ -178,6 +180,11 @@ class Measurement:
                 return None
             return data_list[-1]
 
+    class Error:
+        message: List[str]
+        component: str
+        trace: List[str]
+
     # Values
     capacitive_moisture: Dict[str, CapacitiveMoisture]
     si1145: SI1145
@@ -195,14 +202,24 @@ class Measurement:
     measured_from: datetime
     measured_to: datetime
     count_since_start: int
+    errors: List[Error]
 
     def __init__(self, owner: str = None, label: str = None):
+        self.capacitive_moisture = None
+        self.si1145 = None
+        self.bme680 = None
+        self.scd30 = None
+        self.as7341 = None
+        self.raspberry = None
+        self.pictures = None
+        self.relays_on = None
         self.owner = owner
         self.label = label
         self.version = common.version
         self.measured_from = datetime.now()
         self.measured_to = datetime.now()
         self.count_since_start = None
+        self.errors = []
 
     @staticmethod
     # When aggregating, consider relay on if there is a majority of measurements as on
@@ -239,6 +256,7 @@ class Measurement:
         combined_measurement.measured_from = min([m.measured_from for m in measurements])
         combined_measurement.measured_to = max([m.measured_from for m in measurements])
         combined_measurement.count_since_start = measurements[0].count_since_start
+        combined_measurement.errors = [error for m in measurements for error in m.errors]
 
         return combined_measurement
 
@@ -248,6 +266,16 @@ class Measurement:
                 return o.astimezone().isoformat()
             elif isinstance(o, bytes):
                 return None
-            else:
+            elif hasattr(o, "__dict__"):
                 return o.__dict__
+            else:
+                return o
         return json.dumps(self.__dict__, default=json_converter)
+
+    def add_error(self, component: str) -> None:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        error = Measurement.Error()
+        error.message = traceback.format_exception_only(exc_type, exc_value)
+        error.component = component
+        error.trace = traceback.format_tb(exc_traceback)
+        self.errors.append(error)

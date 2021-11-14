@@ -55,21 +55,45 @@ try:
 
         measurement: Measurement = Measurement(owner=user_config.owner, label=user_config.label)
         if user_config.capacitive_moisture_sensor_enabled:
-            measurement.capacitive_moisture = capacitive_moisture_sensor.read()
+            try:
+                measurement.capacitive_moisture = capacitive_moisture_sensor.read()
+            except:
+                measurement.add_error('capacitive_moisture')
         if user_config.si1145_sensor_enabled:
-            measurement.si1145 = si1145_sensor.read()
+            try:
+                measurement.si1145 = si1145_sensor.read()
+            except:
+                measurement.add_error('si1145_sensor')
         if user_config.bme680_sensor_enabled:
-            measurement.bme680 = bme680_sensor.read()
+            try:
+                measurement.bme680 = bme680_sensor.read()
+            except:
+                measurement.add_error('bme680_sensor')
         if user_config.scd30_sensor_enabled:
-            measurement.scd30 = scd30_sensor.read(measurement.bme680.temperature if measurement.bme680 else None)
+            try:
+                measurement.scd30 = scd30_sensor.read(measurement.bme680.temperature if measurement.bme680 else None)
+            except:
+                measurement.add_error('scd30_sensor')
         if user_config.as7341_sensor_enabled:
-            measurement.as7341 = as7341_sensor.read()
+            try:
+                measurement.as7341 = as7341_sensor.read()
+            except:
+                measurement.add_error('as7341_sensor')
         if user_config.raspberry_sensor_enabled:
-            measurement.raspberry = raspberry_sensor.read()
+            try:
+                measurement.raspberry = raspberry_sensor.read()
+            except:
+                measurement.add_error('raspberry_sensor')
         if user_config.camera_enabled:
-            measurement.pictures = camera.take_pictures_if_scheduled()
+            try:
+                measurement.pictures = camera.take_pictures_if_scheduled()
+            except:
+                measurement.add_error('camera')
         if user_config.relay_switch_enabled:
-            measurement.relays_on = relay_switch.check()
+            try:
+                measurement.relays_on = relay_switch.check()
+            except:
+                measurement.add_error('relay_switch')
         measurements.append(measurement)
 
         if datetime.now() > post_data_next:
