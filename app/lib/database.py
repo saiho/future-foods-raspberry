@@ -1,4 +1,5 @@
 from typing import List
+from logging import info
 import psycopg2
 from lib.measurement import Measurement
 from lib.user_config import user_config
@@ -12,7 +13,7 @@ def insert_data(measurement: Measurement):
     count_since_start = count_since_start + 1
     measurement.count_since_start = count_since_start
 
-    print("Connecting to DB")
+    info("Connecting to DB")
     connection = psycopg2.connect(
         host=user_config.database.host,
         port=user_config.database.port,
@@ -23,7 +24,7 @@ def insert_data(measurement: Measurement):
     create_date = measurement.measured_to.astimezone()
 
     cursor = connection.cursor()
-    print("Inserting measurement")
+    info("Inserting measurement")
     cursor.execute("""
         INSERT INTO measurement
             ("owner", create_date, "label", full_content)
@@ -36,7 +37,7 @@ def insert_data(measurement: Measurement):
     ))
 
     if measurement.capacitive_moisture:
-        print("Inserting measurement_soil_moisture")
+        info("Inserting measurement_soil_moisture")
         capacitive_moisture_values: List[float] = [None] * 6
         capacitive_moisture_stdevs: List[float] = [None] * 6
         capacitive_moisture_tags: List[str] = [None] * 6
@@ -73,7 +74,7 @@ def insert_data(measurement: Measurement):
         ))
 
     if measurement.si1145:
-        print("Inserting measurement_si1145")
+        info("Inserting measurement_si1145")
         cursor.execute("""
             INSERT INTO measurement_si1145
                 ("owner", create_date, sunlight_visible, stdev_sunlight_visible, sunlight_uv, stdev_sunlight_uv, sunlight_ir, stdev_sunlight_ir)
@@ -90,7 +91,7 @@ def insert_data(measurement: Measurement):
         ))
 
     if measurement.bme680:
-        print("Inserting measurement_bme680")
+        info("Inserting measurement_bme680")
         cursor.execute("""
             INSERT INTO measurement_bme680
                 ("owner", create_date, temperature, stdev_temperature, pressure, stdev_pressure, humidity, stdev_humidity, gas_resistance, stdev_gas_resistance)
@@ -109,7 +110,7 @@ def insert_data(measurement: Measurement):
         ))
 
     if measurement.scd30:
-        print("Inserting measurement_scd30")
+        info("Inserting measurement_scd30")
         cursor.execute("""
             INSERT INTO measurement_scd30
                 ("owner", create_date, co2_ppm, stdev_co2_ppm, temperature, stdev_temperature, humidity, stdev_humidity)
@@ -126,7 +127,7 @@ def insert_data(measurement: Measurement):
         ))
 
     if measurement.as7341:
-        print("Inserting measurement_as7341")
+        info("Inserting measurement_as7341")
         cursor.execute("""
             INSERT INTO measurement_as7341
                 ("owner", create_date, violet_415nm, stdev_violet_415nm, indigo_445nm, stdev_indigo_445nm, blue_480nm, stdev_blue_480nm, cyan_515nm, stdev_cyan_515nm, green_555nm, stdev_green_555nm, yellow_590nm, stdev_yellow_590nm, orange_630nm, stdev_orange_630nm, red_680nm, stdev_red_680nm)
@@ -153,7 +154,7 @@ def insert_data(measurement: Measurement):
         ))
 
     if measurement.pictures:
-        print("Inserting measurement_picture")
+        info("Inserting measurement_picture")
         for key, pict in measurement.pictures.items():
             cursor.execute("""
                 INSERT INTO measurement_picture
@@ -169,4 +170,4 @@ def insert_data(measurement: Measurement):
     connection.commit()
     cursor.close()
     connection.close()
-    print("Connection closed")
+    info("Connection closed")

@@ -1,3 +1,4 @@
+from logging import info, warning
 import time
 import bme680
 from lib.measurement import Measurement
@@ -12,7 +13,7 @@ bme680_sensor: bme680.BME680
 def init():
     global bme680_sensor
 
-    print("Init BME680 sensor")
+    info("Init BME680 sensor")
     try:
         bme680_sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
     except IOError:
@@ -33,7 +34,7 @@ def init():
 def read() -> Measurement.BME680:
     global bme680_sensor
 
-    print("BME680 wait for measurement")
+    info("BME680 wait for measurement")
     max_count: int = 20
     while (not bme680_sensor.get_sensor_data() or not bme680_sensor.data.heat_stable) and max_count > 0:
         max_count = max_count - 1
@@ -45,8 +46,8 @@ def read() -> Measurement.BME680:
         data.temperature = bme680_sensor.data.temperature
         data.humidity = bme680_sensor.data.humidity
         data.pressure = bme680_sensor.data.pressure
-        print(f"VOC = {data.gas_resistance}, temperature = {data.temperature}, humidity = {data.humidity}, pressure = {data.pressure}")
+        info(f"VOC = {data.gas_resistance}, temperature = {data.temperature}, humidity = {data.humidity}, pressure = {data.pressure}")
         return data
     else:
-        print("Failed to read BME680 data, sensor not ready.")
+        warning("Failed to read BME680 data, sensor not ready.")
         return None

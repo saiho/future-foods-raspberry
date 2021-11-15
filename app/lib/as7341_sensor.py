@@ -1,3 +1,4 @@
+from logging import info
 import board
 from adafruit_as7341 import AS7341
 from lib.measurement import Measurement
@@ -11,7 +12,7 @@ as7341: AS7341
 
 def init():
     global as7341
-    print("Init AS7341 sensor")
+    info("Init AS7341 sensor")
     as7341 = AS7341(board.I2C())
     read()  # Test read
 
@@ -29,6 +30,6 @@ def read() -> Measurement.AS7341():
     data.orange_630nm = all_channels[6]
     data.red_680nm = all_channels[7]
 
-    print(f"Visible light: violet = {data.violet_415nm}, indigo = {data.indigo_445nm}, blue = {data.blue_480nm}, cyan = {data.cyan_515nm}, green = {data.green_555nm}, yellow = {data.yellow_590nm}, orange = {data.orange_630nm}, red = {data.red_680nm}")
+    info(f"Visible light: violet = {data.violet_415nm}, indigo = {data.indigo_445nm}, blue = {data.blue_480nm}, cyan = {data.cyan_515nm}, green = {data.green_555nm}, yellow = {data.yellow_590nm}, orange = {data.orange_630nm}, red = {data.red_680nm}")
 
     return data

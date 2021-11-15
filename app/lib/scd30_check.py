@@ -10,6 +10,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib import scd30_sensor
+from lib.user_config import user_config # load logging level
 
 scd30_sensor.init()
 

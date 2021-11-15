@@ -1,4 +1,5 @@
 from typing import Dict
+from logging import info, error
 from datetime import datetime
 import subprocess
 from lib.user_config import user_config, Config
@@ -13,7 +14,7 @@ def init():
     picture_take_next = datetime.combine(datetime.now(), user_config.camera_take_time)
     while picture_take_next < datetime.now():
         picture_take_next = picture_take_next + common.picture_take_interval
-    print("Next picture to be taken at", picture_take_next.astimezone())
+    info(f"Next picture to be taken at {picture_take_next.astimezone()}")
 
     # Test camera
     for d in user_config.camera_devices.values():
@@ -25,13 +26,13 @@ def take_pictures_if_scheduled() -> Dict[str, Measurement.Picture]:
     if picture_take_next is None or datetime.now() < picture_take_next:
         return None
     picture_take_next = picture_take_next + common.picture_take_interval
-    print("Next picture to be taken at", picture_take_next.astimezone())
+    info(f"Next picture to be taken at {picture_take_next.astimezone()}")
 
     return {key: take_picture(camera) for key, camera in user_config.camera_devices.items()}
 
 
 def take_picture(device_config: Config.CameraDevice) -> Measurement.Picture:
-    print("Take picture")
+    info("Take picture")
 
     picture: Measurement.Picture = Measurement.Picture()
     picture.quality = device_config.quality
@@ -48,8 +49,8 @@ def take_picture(device_config: Config.CameraDevice) -> Measurement.Picture:
         ["cwebp", "-q", str(device_config.quality), "-o", "-", "--", "-"], stdin=process_fswebcam.stdout, stdout=subprocess.PIPE)
     picture.data = process_cwebp.communicate()[0]
     if process_cwebp.returncode != 0:
-        print("Error taking picture")
+        error("Error taking picture")
         return None
 
-    print(f"Retrieved and encoded picture (size = {len(picture.data)})")
+    info(f"Retrieved and encoded picture (size = {len(picture.data)})")
     return picture

@@ -2,6 +2,7 @@
 
 import sys
 import time
+from logging import info, exception
 from datetime import datetime, timedelta
 from typing import List
 from lib.measurement import Measurement
@@ -18,13 +19,13 @@ import lib.common as common
 from lib.user_config import user_config
 
 if not user_config.monitoring_enabled:
-    print("Sensor monitor service is disabled. Doing nothing.")
+    info("Sensor monitor service is disabled. Doing nothing.")
     time.sleep(timedelta(hours=5).total_seconds())
     sys.exit("Bored of doing nothing")
 
-print("Starting sensor monitor service")
-print("Version", common.version)
-print("Current Time =", datetime.now().astimezone())
+info("Starting sensor monitor service")
+info(f"Version {common.version}")
+info(f"Current Time = {datetime.now().astimezone()}")
 
 # Init sensors
 if user_config.capacitive_moisture_sensor_enabled:
@@ -57,43 +58,51 @@ try:
         if user_config.capacitive_moisture_sensor_enabled:
             try:
                 measurement.capacitive_moisture = capacitive_moisture_sensor.read()
-            except:
+            except Exception as e:
                 measurement.add_error('capacitive_moisture')
+                exception(e)
         if user_config.si1145_sensor_enabled:
             try:
                 measurement.si1145 = si1145_sensor.read()
-            except:
+            except Exception as e:
                 measurement.add_error('si1145_sensor')
+                exception(e)
         if user_config.bme680_sensor_enabled:
             try:
                 measurement.bme680 = bme680_sensor.read()
-            except:
+            except Exception as e:
                 measurement.add_error('bme680_sensor')
+                exception(e)
         if user_config.scd30_sensor_enabled:
             try:
                 measurement.scd30 = scd30_sensor.read(measurement.bme680.temperature if measurement.bme680 else None)
-            except:
+            except Exception as e:
                 measurement.add_error('scd30_sensor')
+                exception(e)
         if user_config.as7341_sensor_enabled:
             try:
                 measurement.as7341 = as7341_sensor.read()
-            except:
+            except Exception as e:
                 measurement.add_error('as7341_sensor')
+                exception(e)
         if user_config.raspberry_sensor_enabled:
             try:
                 measurement.raspberry = raspberry_sensor.read()
-            except:
+            except Exception as e:
                 measurement.add_error('raspberry_sensor')
+                exception(e)
         if user_config.camera_enabled:
             try:
                 measurement.pictures = camera.take_pictures_if_scheduled()
-            except:
+            except Exception as e:
                 measurement.add_error('camera')
+                exception(e)
         if user_config.relay_switch_enabled:
             try:
                 measurement.relays_on = relay_switch.check()
-            except:
+            except Exception as e:
                 measurement.add_error('relay_switch')
+                exception(e)
         measurements.append(measurement)
 
         if datetime.now() > post_data_next:
@@ -103,7 +112,7 @@ try:
             measurements = []
 
         # Wait for next measurement
-        print("Wait for next measurement at", measurement_next.astimezone())
+        info(f"Wait for next measurement at {measurement_next.astimezone()}")
         time.sleep((measurement_next - datetime.now()).total_seconds())
 
 finally:

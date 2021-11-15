@@ -1,4 +1,5 @@
 from typing import Dict
+import logging
 import sys
 import os
 from datetime import datetime, time
@@ -94,31 +95,22 @@ class Config:
             self.off_time = _to_time(config_data.get("off_time"))
             self.on_as_one = config_data.get("on_as_one", True)
 
+    # Configuration values
     owner: str
     label: str
-
     database: Database
-
     monitoring_enabled: bool
-
     capacitive_moisture_sensor_enabled: bool
     capacitive_moisture_sensors: Dict[str, CapacitiveMoistureSensor]
-
     si1145_sensor_enabled: bool
-
     bme680_sensor_enabled: bool
-
     scd30_sensor_enabled: bool
     scd30_auto_self_calibration: bool
-
     as7341_sensor_enabled: bool
-
     raspberry_sensor_enabled: bool
-
     camera_enabled: bool
     camera_take_time: time
     camera_devices: Dict[str, CameraDevice]
-
     relay_switch_enabled: bool
     relay_switch_devices: Dict[str, RelaySwitchDevice]
 
@@ -157,6 +149,10 @@ class Config:
         self.relay_switch_enabled = relay_switch_config_data.get("enabled", True)
         self.relay_switch_devices = {
             key: Config.RelaySwitchDevice(relay) for key, relay in relay_switch_config_data.get("devices", {}).items()}
+
+        # Logging configuration
+        logging_config_data: dict = config_data.get("logging", {})
+        logging.basicConfig(level=logging_config_data.get("level", "INFO"), format=logging_config_data.get("format", "%(message)s"))
 
 
 user_config: Config

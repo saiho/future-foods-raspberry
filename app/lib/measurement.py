@@ -205,14 +205,6 @@ class Measurement:
     errors: List[Error]
 
     def __init__(self, owner: str = None, label: str = None):
-        self.capacitive_moisture = None
-        self.si1145 = None
-        self.bme680 = None
-        self.scd30 = None
-        self.as7341 = None
-        self.raspberry = None
-        self.pictures = None
-        self.relays_on = None
         self.owner = owner
         self.label = label
         self.version = common.version

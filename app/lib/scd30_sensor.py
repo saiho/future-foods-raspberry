@@ -1,4 +1,5 @@
 from datetime import datetime
+from logging import info, warning, error
 import time
 import scd30_i2c
 from lib import common
@@ -18,12 +19,12 @@ def init():
     global scd30
     global firmware_version
 
-    print("Init SCD30 sensor")
+    info("Init SCD30 sensor")
     scd30 = scd30_i2c.SCD30()
     scd30.stop_periodic_measurement()  # just in case was left active in a previous run
     firmware_version = scd30.get_firmware_version()
     if firmware_version is None:
-        print("Problem communicating with SCD30 sensor, trying to reset")
+        error("Problem communicating with SCD30 sensor, trying to reset")
         scd30.soft_reset()
         time.sleep(5)
         firmware_version = scd30.get_firmware_version()
@@ -32,10 +33,10 @@ def init():
 
     scd30.set_measurement_interval(int(common.measurement_interval.total_seconds()))
     scd30.set_temperature_offset(0)
-    print(f"SCD30 auto self calibration: {user_config.scd30_auto_self_calibration}")
+    info(f"SCD30 auto self calibration: {user_config.scd30_auto_self_calibration}")
     scd30.set_auto_self_calibration(user_config.scd30_auto_self_calibration)
     scd30.start_periodic_measurement()
-    print(f"SCD30 Started measuring every {scd30.get_measurement_interval()} seconds")
+    info(f"SCD30 Started measuring every {scd30.get_measurement_interval()} seconds")
 
     global temperature_offset_correction_next
     temperature_offset_correction_next = datetime.now() + common.scd30_temperature_offset_correction_interval
@@ -47,7 +48,7 @@ def close():
     global scd30
 
     if scd30:
-        print("SCD30 Stop measuring")
+        info("SCD30 Stop measuring")
         scd30.stop_periodic_measurement()
 
 
@@ -57,7 +58,7 @@ def read(real_temperature: float = None) -> Measurement.SCD30:
 
     data = None
 
-    print("SCD30 wait for measurement")
+    info("SCD30 wait for measurement")
     max_count: int = 10
     while max_count > 0:
         max_count = max_count - 1
@@ -75,7 +76,7 @@ def read(real_temperature: float = None) -> Measurement.SCD30:
                 if real_temperature is not None and datetime.now() > temperature_offset_correction_next:
                     temperature_offset_correction_next = datetime.now() + common.scd30_temperature_offset_correction_interval
                     data.temperature_offset = data.temperature + scd30.get_temperature_offset() - real_temperature
-                    print("Recalculated offset temperature", data.temperature_offset)
+                    info(f"Recalculated offset temperature {data.temperature_offset}")
                     if data.temperature_offset < 0:
                         data.temperature_offset = 0
                     if data.temperature_offset > common.scd30_temperature_offset_max:
@@ -84,8 +85,8 @@ def read(real_temperature: float = None) -> Measurement.SCD30:
                 else:
                     data.temperature_offset = scd30.get_temperature_offset()
 
-                print(f"CO2 = {data.co2_ppm}, temperature = {data.temperature}, temperature_offset = {data.temperature_offset}, humidity = {data.humidity}")
+                info(f"CO2 = {data.co2_ppm}, temperature = {data.temperature}, temperature_offset = {data.temperature_offset}, humidity = {data.humidity}")
 
     if not data:
-        print("Failed to read SCD30 data, sensor not ready")
+        warning("Failed to read SCD30 data, sensor not ready")
     return data

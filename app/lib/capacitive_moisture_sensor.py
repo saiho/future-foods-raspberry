@@ -1,4 +1,5 @@
 from typing import Dict
+from logging import info
 from grove.adc import ADC
 from lib.measurement import Measurement
 from lib.user_config import user_config
@@ -12,7 +13,7 @@ adc: ADC
 
 def init():
     global adc
-    print("Init ADC channel")
+    info("Init ADC channel")
     adc = ADC()
     read()  # Test read
 
@@ -24,5 +25,5 @@ def read() -> Dict[str, Measurement.CapacitiveMoisture]:
         data[key] = Measurement.CapacitiveMoisture()
         data[key].value = adc.read_voltage(sensor.port)
         data[key].port = sensor.port
-    print("Moisture values:", {key: sensor.value for key, sensor in data.items()})
+    info("Moisture values: %s", {key: sensor.value for key, sensor in data.items()})
     return data

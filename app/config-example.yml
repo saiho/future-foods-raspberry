@@ -55,3 +55,5 @@ relay_switch.devices:
     on_time: "11:00"
     off_time: "11:30"
     on_as_one: true
+
+logging.level: INFO
