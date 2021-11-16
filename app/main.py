@@ -59,50 +59,50 @@ try:
             try:
                 measurement.capacitive_moisture = capacitive_moisture_sensor.read()
             except Exception as e:
-                measurement.add_error('capacitive_moisture')
                 exception(e)
+                measurement.add_error_current_exception("capacitive_moisture")
         if user_config.si1145_sensor_enabled:
             try:
                 measurement.si1145 = si1145_sensor.read()
             except Exception as e:
-                measurement.add_error('si1145_sensor')
                 exception(e)
+                measurement.add_error_current_exception("si1145_sensor")
         if user_config.bme680_sensor_enabled:
             try:
                 measurement.bme680 = bme680_sensor.read()
             except Exception as e:
-                measurement.add_error('bme680_sensor')
                 exception(e)
+                measurement.add_error_current_exception("bme680_sensor")
         if user_config.scd30_sensor_enabled:
             try:
                 measurement.scd30 = scd30_sensor.read(measurement.bme680.temperature if measurement.bme680 else None)
             except Exception as e:
-                measurement.add_error('scd30_sensor')
                 exception(e)
+                measurement.add_error_current_exception("scd30_sensor")
         if user_config.as7341_sensor_enabled:
             try:
                 measurement.as7341 = as7341_sensor.read()
             except Exception as e:
-                measurement.add_error('as7341_sensor')
                 exception(e)
+                measurement.add_error_current_exception("as7341_sensor")
         if user_config.raspberry_sensor_enabled:
             try:
                 measurement.raspberry = raspberry_sensor.read()
             except Exception as e:
-                measurement.add_error('raspberry_sensor')
                 exception(e)
+                measurement.add_error_current_exception("raspberry_sensor")
         if user_config.camera_enabled:
             try:
                 measurement.pictures = camera.take_pictures_if_scheduled()
             except Exception as e:
-                measurement.add_error('camera')
                 exception(e)
+                measurement.add_error_current_exception("camera")
         if user_config.relay_switch_enabled:
             try:
                 measurement.relays_on = relay_switch.check()
             except Exception as e:
-                measurement.add_error('relay_switch')
                 exception(e)
+                measurement.add_error_current_exception("relay_switch")
         measurements.append(measurement)
 
         if datetime.now() > post_data_next:

@@ -264,7 +264,7 @@ class Measurement:
                 return o
         return json.dumps(self.__dict__, default=json_converter)
 
-    def add_error(self, component: str) -> None:
+    def add_error_current_exception(self, component: str) -> None:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         error = Measurement.Error()
         error.message = traceback.format_exception_only(exc_type, exc_value)
