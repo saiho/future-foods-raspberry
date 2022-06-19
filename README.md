@@ -32,12 +32,6 @@ Additional instructions to access Raspberry for the first time without monitor:
 
 https://www.raspberrypi.org/documentation/configuration/wireless/headless.md
 
-## Add an extra partition
-
-After finishing the setup, the idea is to lock the two default partitions (`boot` and `rootfs`) setting them as readonly (see below, [Overlay FS](#overlay-fs)). To allow upgrading the application easily, a new partition is created. It will contain the application and some configuration files.
-
-From Liux, shrink the `rootfs` partition. That can be done using several partition manager tools, or from the command line, using `resize2fs`. Then create a new EXT4 partition. Again, that can be done with a partition manager or the commands `parted` and `mkfs.ext4`.
-
 ## First boot, and login
 
 Boot the Raspbbery and wait some minutes.
@@ -100,6 +94,14 @@ sudo pip3 install psycopg2-binary
 sudo pip3 install pyyaml
 ```
 
+## Add an extra partition
+
+After finishing the setup, the idea is to lock the two default partitions (`boot` and `rootfs`) setting them as readonly (see below, [Overlay FS](#overlay-fs)). To allow upgrading the application easily, a new partition is created. It will contain the application and some configuration files.
+
+From Liux, shrink the `rootfs` partition. That can be done using several partition manager tools, or from the command line, using `resize2fs`. Then create a new EXT4 partition. Again, that can be done with a partition manager or the commands `parted` and `mkfs.ext4`.
+
+Note that shrink should be done after first boot, otherwise the first boot could fail.
+
 ## Mount new partition
 
 The idea is to have an entry in the `fstab` that will mount the new partition by default as read-only. When necessary, it could be remounted as read-write.
@@ -161,6 +163,8 @@ pi ALL=(root) NOPASSWD: /usr/bin/mount -o remount\,ro /app
 ```
 
 Note, the characters `,`, `:`, `=` and `\` must be escaped with `\` when they are part of the command arguments.
+
+Note 2, be extra careful when editing `010_pi-nopasswd`. Any syntax error or wrong character will cause the file to be corrupted and it will not be possible to login as root.
 
 ## Overlay FS
 
