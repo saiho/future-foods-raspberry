@@ -5,46 +5,27 @@ This readme contains miscellaneous notes, thoughts, code snippets, etc.
 
 # Setting up Raspberry for the first time
 
-Format an SD card and install Raspberry Pi OS Lite (normal version with desktop is not necessary). 
+Install Raspberry Pi OS Lite (the normal version with desktop is not recommended) in a SD card using `rpi-imager`. Be sure to setup the Wi-Fi properly and enable ssh access.
 
-https://www.raspberrypi.org/documentation/installation/installing-images/
+https://www.raspberrypi.com/documentation/computers/getting-started.html#raspberry-pi-imager
 
-After formatting, there will be two partitions: `boot` and `rootfs`. Place in `boot` two files:
+Additional instructions to access Raspberry for the first time without using a screen:
 
-- An empty file called `ssh` (this enables SSH access).
-- A file called `wpa_supplicant.conf` with the following content:
-
-```ini
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-country=ES
-
-network={
- ssid="the_name_of_the_wifi"
- psk="the_password_of_the_wifi"
-}
-```
-
-That setups the Wifi connection of the Raspberry.
-Replace the name and password of the Wifi and the country by the appropriate ones.
-
-Additional instructions to access Raspberry for the first time without monitor:
-
-https://www.raspberrypi.org/documentation/configuration/wireless/headless.md
+https://www.raspberrypi.com/documentation/computers/configuration.html#setting-up-a-headless-raspberry-pi
 
 ## First boot, and login
 
-Boot the Raspbbery and wait some minutes.
-
-From your PC, connected to the same WIFI, run:
+Boot the Raspberry and wait some minutes. From a PC connected to the same Wi-Fi run:
 
 ```sh
 ssh pi@raspberrypi.local
 ```
 
+Use the password configured with `rpi-imager`.
+
 Note, in some networks `raspberrypi.local` is not automatically detected. You need to find the exact IP. Normally, in the router admin page you can see the devices connected. You could find there the IP of the Raspberry. Then try ssh using the IP instead of `raspberrypi.local`.
 
-The default password is "raspberry". After first login, change the password running `sudo passwd`.
+To avoid entering the password everytime you connect, you can authorize the main PC to access the Raspberry running `ssh-copy-id zhome@zhome.local` from the PC.
 
 ## Upgrade packages to latest version
 
@@ -94,17 +75,23 @@ sudo pip3 install psycopg2-binary
 sudo pip3 install pyyaml
 ```
 
-## Add an extra partition
+## Partitions and OverlayFS
 
-After finishing the setup, the idea is to lock the two default partitions (`boot` and `rootfs`) setting them as readonly (see below, [Overlay FS](#overlay-fs)). To allow upgrading the application easily, a new partition is created. It will contain the application and some configuration files.
+After finishing the setup, the idea is to lock the partitions `boot` and `rootfs`, setting them as readonly and activate the [OverlayFS](#enable-overlayfs). The OverlayFS allows to write in the root partition, keeping the changes only in memory but never writing them back in the SD card. This means that if the Raspberry is rebooted, all changes are lost. This prevents damaging the SD card due to frequent writes or corrupting the file system due to sudden loss of power.
 
-From Liux, shrink the `rootfs` partition. That can be done using several partition manager tools, or from the command line, using `resize2fs`. Then create a new EXT4 partition. Again, that can be done with a partition manager or the commands `parted` and `mkfs.ext4`.
+To allow upgrading the application easily, a new partition is created. It will contain the application and some configuration files. The partition name will be `app`.
 
-Note that shrink should be done after first boot, otherwise the first boot could fail.
+By default the `app` partition will be mounted as read-only. Everytime that becomes necessary to save changes, it has to be remounted as read-write, save the data, and finally remount it as read-only.
 
-## Mount new partition
+### Add the app partition
 
-The idea is to have an entry in the `fstab` that will mount the new partition by default as read-only. When necessary, it could be remounted as read-write.
+Extract the SD Card from the Raspberry and open it in your main PC. Using Linux, shrink the `rootfs` partition, reducing it by 2 Gb. This can be done using several partition manager tools, or from the command line, using `resize2fs`. Note that the shrink should be done **after first boot**, otherwise the first boot could fail.
+
+Then create a new EXT4 partition with the label `app`. Again, this can be done with a partition manager or the commands `parted` and `mkfs.ext4`.
+
+### Mount the new partition
+
+Put the SD Card back in the Raspberry, boot and connect.
 
 Get the PARTUUID of the new partition, running `blkid /dev/mmcblk0p3`.
 
@@ -113,6 +100,10 @@ Add to `/etc/fstab` the following line:
 ```
 PARTUUID=ec3937c5-03  /app            ext4    ro,exec,nosuid,nodev,noatime,auto    0       2
 ```
+
+That entry will mount the new partition by default as read-only. When necessary, it could be remounted as read-write.
+
+After modifying `fstab`, run `systemctl daemon-reload` and restart.
 
 ## Install the code
 
@@ -149,7 +140,7 @@ sudo systemctl enable future-foods-sensor # Start the service automatically on b
 
 ## Security
 
-It is recommended that access to root account is protected with password. See: https://www.raspberrypi.org/documentation/configuration/security.md
+It is recommended to protect access to the root account with a password. See: https://www.raspberrypi.com/documentation/computers/configuration.html#secure-your-raspberry-pi
 
 To do that, still allowing the user `pi` to remount the partition of the application and start/stop the service, replace the content of `/etc/sudoers.d/010_pi-nopasswd` by:
 
@@ -166,16 +157,32 @@ Note, the characters `,`, `:`, `=` and `\` must be escaped with `\` when they ar
 
 Note 2, be extra careful when editing `010_pi-nopasswd`. Any syntax error or wrong character will cause the file to be corrupted and it will not be possible to login as root.
 
-## Overlay FS
+## Enable OverlayFS
 
-It is very much recommended to enable Overlay FS to prevent damaging the SD card due to continuos writes or corrupting the file system due to sudden loss of power.
+As explained in [Partitions and OverlayFS](#partitions-and-overlay-fs), it is recommended to enable OverlayFS to protect the SD Card and reduce the risk of file system corruption.
 
-Run `sudo raspi-config` and activate: Performance / Overlay FS.
+Run in the Raspberry `sudo raspi-config` and activate: Performance / Overlay FS. The first time it will install the necessary APT packages. Reboot.
 
-From now on, any change in the root file system will be lost after reboot. To make permanent system changes, like installing or upgrading packages, you need to disable the Overlay FS first and reboot.
+The default configuration makes `/app` also overlaid, which we don't want, because we want it to be writable on-demand. This cannot be changed with `raspi-config`, so second step is to deactivate OverlayFS with `raspi-config` and reboot again.
 
-Changes inside `/app` are permanent across reboots. There is no need of disabling the Overlay FS, that's why the code is installed there.
+Third step, run in the Raspberry `sudo echo overlayroot=tmpfs:recurse=0 > /etc/overlayroot.local.conf`. This activates OverlayFS only in the root partition (non recursively).
 
+Do some cleaning (delete bash history, cached files, logs…) before doing the final reboot. After rebooting the root partition will be "frozen", since OverlayFS will be active and changes in the root partition will be volatile.
+
+Reboot. After rebooting check with `mount` that `/app` has normal mount options and it is not overlaid.
+
+You can find how much memory takes the OverlayFS by running `sudo du -hs /media/root-rw/overlay/*`.
+
+### How to disable OverlayFS
+
+There are two ways of making permanent system changes when OverlayFS is active:
+
+1. Execute `mount -o remount,rw /media/root-ro`, make the changes under `/media/root-ro/`, and then `mount -o remount,ro /media/root-ro/`. If the files updated in `/media/root-ro/` have been also modified in `/` and stay in memory, you won't see the changes made in `/media/root-ro/` propagated to `/` immediately.
+2. Execute `overlayroot-chroot` and make the changes. If after exiting, the changes are not visible, run `mount -o remount /` to synchronize.
+
+To disable OverlayFS, using one of the two methods described, comment with `#` the only line of `/etc/overlayroot.local.conf` and reboot.
+
+To re-enable just remove the comment character `#` and reboot.
 
 ## Starting and stoping the service on demand
 
@@ -188,7 +195,7 @@ systemctl status future-foods-sensor -n1000 # Get status and 1000 lines of logs
 
 ## Upgrading the code or updating settings
 
-Every you need to modify the code or the settings, run:
+Every time you need to modify the code or the settings, run:
 
 ```sh
 sudo systemctl stop future-foods-sensor
