@@ -77,11 +77,12 @@ sudo pip3 install pyyaml
 
 ## Partitions and OverlayFS
 
-After finishing the setup, the idea is to lock the partitions `boot` and `rootfs`, setting them as readonly and activate the [OverlayFS](#enable-overlayfs). The OverlayFS allows to write in the root partition, keeping the changes only in memory but never writing them back in the SD card. This means that if the Raspberry is rebooted, all changes are lost. This prevents damaging the SD card due to frequent writes or corrupting the file system due to sudden loss of power.
+After finishing the setup, the idea is to lock the partitions `boot` and `rootfs`, setting them as read-only and activate the [OverlayFS](#enable-overlayfs). The OverlayFS allows to write in the protected partitions, keeping the changes only in memory but never writing them back in the SD card. This means that if the Raspberry is rebooted, all changes are lost. This prevents damaging the SD card due to frequent writes or corrupting the file system due to sudden loss of power.
 
-To allow upgrading the application easily, a new partition is created. It will contain the application and some configuration files. The partition name will be `app`.
+To allow upgrading the application easily, we add an extra partition named `app` that will not be part of the OverlayFS. It will contain the application and some configuration files.
 
-By default the `app` partition will be mounted as read-only. Everytime that becomes necessary to save changes, it has to be remounted as read-write, save the data, and finally remount it as read-only.
+
+By default the `app` partition will be mounted as read-only. Everytime that becomes necessary to do changes, it has to be remounted as read-write, then save the data, and finally remount it as read-only. The reason to do this way is to flush changes as soon as possible and reduce the risk of file system corruption if the system crashes or it is shutted down suddenly.
 
 ### Add the app partition
 
@@ -159,17 +160,22 @@ Note 2, be extra careful when editing `010_pi-nopasswd`. Any syntax error or wro
 
 ## Enable OverlayFS
 
-As explained in [Partitions and OverlayFS](#partitions-and-overlay-fs), it is recommended to enable OverlayFS to protect the SD Card and reduce the risk of file system corruption.
+As explained in [Partitions and OverlayFS](#partitions-and-overlayfs), it is recommended to enable OverlayFS to protect the SD Card and reduce the risk of file system corruption.
 
-Run in the Raspberry `sudo raspi-config` and activate: Performance / Overlay FS. The first time it will install the necessary APT packages. Reboot.
+Do some cleaning, like removing history files, logs or temporal files before enabling the OverlayFS.
 
-The default configuration makes `/app` also overlaid, which we don't want, because we want it to be writable on-demand. This cannot be changed with `raspi-config`, so second step is to deactivate OverlayFS with `raspi-config` and reboot again.
+Create the following file in `/etc/overlayroot.local.conf`:
 
-Third step, run in the Raspberry `sudo echo overlayroot=tmpfs:recurse=0 > /etc/overlayroot.local.conf`. This activates OverlayFS only in the root partition (non recursively).
+```ini
+#overlayroot="disabled"
+overlayroot="tmpfs:recurse=0"
+```
 
-Do some cleaning (delete bash history, cached files, logs…) before doing the final reboot. After rebooting the root partition will be "frozen", since OverlayFS will be active and changes in the root partition will be volatile.
+Note, the option "recurse=0" is to avoid that `/app` is added to the overlay, since we want it to be writable
 
-Reboot. After rebooting check with `mount` that `/app` has normal mount options and it is not overlaid.
+Run in the Raspberry `sudo raspi-config` and activate: Performance / Overlay FS.
+
+After rebooting, check with `mount` that the type of `/` is overlay but `/app` has not changed. If that is correct, the root partition will be "frozen" and the changes will be volatile.
 
 You can find how much memory takes the OverlayFS by running `sudo du -hs /media/root-rw/overlay/*`.
 
@@ -177,12 +183,12 @@ You can find how much memory takes the OverlayFS by running `sudo du -hs /media/
 
 There are two ways of making permanent system changes when OverlayFS is active:
 
-1. Execute `mount -o remount,rw /media/root-ro`, make the changes under `/media/root-ro/`, and then `mount -o remount,ro /media/root-ro/`. If the files updated in `/media/root-ro/` have been also modified in `/` and stay in memory, you won't see the changes made in `/media/root-ro/` propagated to `/` immediately.
+1. Execute `mount -o remount,rw /media/root-ro`, make the changes under `/media/root-ro/`, and then `mount -o remount,ro /media/root-ro/`. If the files updated in `/media/root-ro/` were also modified in `/` and stay in memory, you won't see the changes made in `/media/root-ro/` propagated to `/` immediately.
 2. Execute `overlayroot-chroot` and make the changes. If after exiting, the changes are not visible, run `mount -o remount /` to synchronize.
 
-To disable OverlayFS, using one of the two methods described, comment with `#` the only line of `/etc/overlayroot.local.conf` and reboot.
+To disable OverlayFS, using one of the two methods described, uncomment the first line of `/etc/overlayroot.local.conf` and comment (with `#`) the second line. Then reboot.
 
-To re-enable just remove the comment character `#` and reboot.
+To re-enable just revert the line comments and reboot.
 
 ## Starting and stoping the service on demand
 
